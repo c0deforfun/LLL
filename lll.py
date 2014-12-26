@@ -2,207 +2,225 @@
 """Main controller of LLL
 """
 import sys, os, inspect, re, ConfigParser, logging
-from PyQt4 import QtGui, QtCore, Qt
 from PyQt4.QtCore import QThread, pyqtSignal, pyqtSlot
+from PyQt4 import QtGui, QtCore, Qt
 from PyQt4.QtGui import QMessageBox
 from ptyview import PtyView
 import clang.cindex
 
-currPath = os.path.split(inspect.getfile(inspect.currentframe()))[0]
-cmd_folder = os.path.realpath(os.path.abspath(currPath))
-if cmd_folder not in sys.path:
-    sys.path.insert(0, cmd_folder)
+def main():
+    """ entry function"""
+    curr_path = os.path.split(inspect.getfile(inspect.currentframe()))[0]
+    cmd_folder = os.path.realpath(os.path.abspath(curr_path))
+    if cmd_folder not in sys.path:
+        sys.path.insert(0, cmd_folder)
 
-cf = ConfigParser.RawConfigParser()
-cf.read('lll.ini')
-lldbPath = '../llvm/lib/python2.7/site-packages'
-loggingLevel = logging.INFO
-if cf.has_section('common'):
-    clangLibPath = cf.get('common', 'clang_lib_path')
-    lldbPath = cf.get('common', 'lldb_path')
-    loggingLevel = cf.get('common', 'logging_level')
-sys.path.append(lldbPath)
-clang.cindex.Config.set_library_path(clangLibPath)
-logging.basicConfig(level=loggingLevel)
+    config = ConfigParser.RawConfigParser()
+    config.read('lll.ini')
+    lldb_path = '../llvm/lib/python2.7/site-packages'
+    logging_level = logging.INFO
+    if config.has_section('common'):
+        clang_lib_path = config.get('common', 'clang_lib_path')
+        lldb_path = config.get('common', 'lldb_path')
+        logging_level = config.get('common', 'logging_level')
+    sys.path.append(lldb_path)
+    clang.cindex.Config.set_library_path(clang_lib_path)
+    logging.basicConfig(level=logging_level)
+    app = QtGui.QApplication(sys.argv)
+    main_window = MainWindow()
+    main_window.show()
+    sys.exit(app.exec_())
 
 
-from lldb import SBTarget, SBProcess, SBDebugger, SBEvent, \
-                 SBCommandReturnObject, SBError, SBStream, SBBreakpoint
+import lldb
+from lldb import SBTarget, SBProcess, SBEvent, \
+                 SBStream, SBBreakpoint
 from ui.UIMain import Ui_MainWindow
 from ui.codeEditor import CodeEditor
 from ui.UIRunConfigWindow import RunConfigWindow
 from debugger import Debugger
 
 class MainWindow(QtGui.QMainWindow):
+    """ Main window of the debugger"""
     def __init__(self):
-        super(MainWindow, self).__init__()
-        self.initUI()
-        self.runCfgWindow = RunConfigWindow()
+        QtGui.QMainWindow.__init__(self)
+        self.init_ui()
+        self.cfg_window = RunConfigWindow()
         self.pty_stdout = PtyView(self.ui.commander)
-        stdoutPath = self.pty_stdout.get_file_path()
+        stdout_path = self.pty_stdout.get_file_path()
 
-        self.debugger = Debugger(stdoutPath, stdoutPath, self.runCfgWindow.workDir)
-        self.ci = self.debugger.dbg.GetCommandInterpreter()
+        self.debugger = Debugger(stdout_path, stdout_path, self.cfg_window.workDir)
+        self.last_highlighted_editor = None
+        self.my_listener = MyListeningThread(self.debugger.dbg)
+        self.my_listener.FocuseLine.connect(self.do_focuse_line)
+        self.my_listener.StateChanged.connect(self.on_state_changed)
+        self.debugger.listener = self.my_listener
+        self.my_listener.start()
 
-        self.lastArgs = None
-        self.lastHighlightedEditor = None
-        self.myListener = MyListeningThread(self.debugger.dbg)
-        self.myListener.FocuseLine.connect(self.doFocuseLine) #TODO
-        self.myListener.StateChanged.connect(self.onStateChanged)
-        self.debugger.listener = self.myListener
-        self.myListener.start()
-
-        self.openedFiles = {}
+        self.opened_files = {}
 
         args = Qt.qApp.arguments()
-        self.runCfgWindow.setWorkingDir(os.getcwd())
+        self.cfg_window.setWorkingDir(os.getcwd())
         if len(args) > 1:
-            self.doExeFileOpen(args[1])
+            self.do_exe_file_open(args[1])
         if len(args) > 2:
-            self.runCfgWindow.setArgStr(' '.join(map(str, args[2:])))
+            self.cfg_window.setArgStr(' '.join([str(x) for x in args[2:]]))
 
-    def initUI(self):
+    def init_ui(self):
+        """initialize UI"""
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         self.ui.tabCodeEditor.clear()
         self.ui.tabCodeEditor.setTabsClosable(True)
         self.ui.tabCodeEditor.setTabShape(QtGui.QTabWidget.Triangular)
-        self.connect(self.ui.action_Open, QtCore.SIGNAL('triggered()'), self.doExeFileOpen)
-        self.connect(self.ui.action_Run, QtCore.SIGNAL('triggered()'), self.doRun)
-        self.connect(self.ui.action_StepOver, QtCore.SIGNAL('triggered()'), self.doStepOver)
-        self.connect(self.ui.action_StepInto, QtCore.SIGNAL('triggered()'), self.doStepInto)
-        self.ui.commander.commandEntered.connect(self.doCommand)
-        self.connect(self.ui.action_Run_Config, QtCore.SIGNAL('triggered()'), self.doRunConfig)
-
-    def log(self, msg):
-        self.statusBar().showMessage(msg)
+        self.connect(self.ui.action_Open, QtCore.SIGNAL('triggered()'), self.do_exe_file_open)
+        self.connect(self.ui.action_Run, QtCore.SIGNAL('triggered()'), self.do_run)
+        self.connect(self.ui.action_StepOver, QtCore.SIGNAL('triggered()'), self.do_step_over)
+        self.connect(self.ui.action_StepInto, QtCore.SIGNAL('triggered()'), self.do_step_into)
+        self.ui.commander.commandEntered.connect(self.do_command)
+        self.connect(self.ui.action_Run_Config, QtCore.SIGNAL('triggered()'), self.do_config)
 
     def closeEvent(self, event):
+        """when close event is triggered"""
         reply = QtGui.QMessageBox.question(self, 'Message', 'Quit?', \
                                            QMessageBox.Yes, QMessageBox.No)
         if reply == QtGui.QMessageBox.Yes:
-            self.myListener.quit()
+            self.my_listener.quit()
             event.accept()
         else:
             event.ignore()
 
-    def doRunConfig(self):
-        self.runCfgWindow.show()
+    def do_config(self):
+        """show run-config window"""
+        self.cfg_window.show()
 
-    def doExeFileOpen(self, exeFileName=None):
-        if not exeFileName:
-            exeFileName = QtGui.QFileDialog.getOpenFileName(self, \
+    def do_exe_file_open(self, exe_filename=None):
+        """open executable"""
+        if not exe_filename:
+            exe_filename = QtGui.QFileDialog.getOpenFileName(self, \
                 self.tr('Open Executable'), \
                 '', self.tr('Executable Files (*)'))
-        if exeFileName is None:
+        if exe_filename is None:
             return
-        mainFile = self.debugger.open_file(exeFileName)
-        if mainFile is not None:
-            self.openSrcFile(mainFile.fullpath)
+        main_file = self.debugger.open_file(exe_filename)
+        if main_file is not None:
+            self.open_src_file(main_file.fullpath)
             self.ui.action_Run.setEnabled(True)
-            self.myListener.addTargetBroadcaster(self.debugger.target.GetBroadcaster())
+            self.my_listener.add_target_broadcaster(self.debugger.target.GetBroadcaster())
         else:
-            logging.info('error opening executable: %s', exeFileName)
+            logging.info('error opening executable: %s', exe_filename)
 
     @pyqtSlot(str, int, name='on_eventListener_FocuseLine')
-    def doFocuseLine(self, fileName, lineNo):
-        if fileName is None:
+    def do_focuse_line(self, filename, line_no):
+        """ slot for focuing line event"""
+        if filename is None:
             editor = None
         else:
-            fileName = str(fileName)
-            logging.debug('Focusing [%s]:%d', fileName, lineNo)
-            if fileName not in self.openedFiles:
-                self.openSrcFile(fileName)
-            editor = self.openedFiles[fileName]
+            filename = str(filename)
+            logging.debug('Focusing [%s]:%d', filename, line_no)
+            if filename not in self.opened_files:
+                self.open_src_file(filename)
+            editor = self.opened_files[filename]
 
-        if self.lastHighlightedEditor != editor:
-            if self.lastHighlightedEditor is not None:
-                self.lastHighlightedEditor.setExtraSelections([])
+        if self.last_highlighted_editor != editor:
+            if self.last_highlighted_editor is not None:
+                self.last_highlighted_editor.setExtraSelections([])
 
         if editor is not None:
-            editor.focuseLine(lineNo)
+            editor.focuseLine(line_no)
             self.ui.tabCodeEditor.setCurrentWidget(editor)
 
-        self.lastHighlightedEditor = editor
+        self.last_highlighted_editor = editor
 
-    def onStateChanged(self, state):
+    def on_state_changed(self, state):
+        """slot for state change event"""
         if state == lldb.eStateExited or state == lldb.eStateCrashed \
            or state == lldb.eStateSuspended:
-            self.doFocuseLine(None, -1)
+            self.do_focuse_line(None, -1)
 
         process = self.debugger.curr_process
         if process is not None:
             self.ui.action_StepOver.setEnabled(process.is_alive)
             self.ui.action_StepInto.setEnabled(process.is_alive)
 
-    def openSrcFile(self, srcFilePath):
-        if not os.path.isfile(srcFilePath) or not os.access(srcFilePath, os.R_OK):
+    def open_src_file(self, src_filename):
+        """show the source file in editor"""
+        if not os.path.isfile(src_filename) or not os.access(src_filename, os.R_OK):
             #TODO: show error message
             return
-        if srcFilePath in self.openedFiles:
+        if src_filename in self.opened_files:
             return
 
-        myText = CodeEditor()
-        self.ui.tabCodeEditor.addTab(myText, os.path.basename(srcFilePath))
-        myText.openSourceFile(srcFilePath)
-        self.openedFiles[str(srcFilePath)] = myText
-        myText.lineNumberArea.BPToggled.connect(self.toggle_breakpoint)
+        editor = CodeEditor()
+        self.ui.tabCodeEditor.addTab(editor, os.path.basename(src_filename))
+        editor.openSourceFile(src_filename)
+        self.opened_files[str(src_filename)] = editor
+        editor.lineNumberArea.BPToggled.connect(self.toggle_breakpoint)
 
-    def toggle_breakpoint(self, lineNo):
+    def toggle_breakpoint(self, line_no):
+        """ control the bp toggling"""
         sender = self.sender()
-        fileName = sender.fileName
-        sender.breakpoints = self.debugger.toggle_breakpoint(fileName, lineNo)
+        filename = sender.fileName
+        sender.breakpoints = self.debugger.toggle_breakpoint(filename, line_no)
         sender.repaint()
 
-    def doCommand(self, cmd):
+    def do_command(self, cmd):
+        """ on command entered"""
         msg = self.debugger.execute(cmd)
         self.ui.commander.append(msg)
 
-    def doRun(self, args=None, fromCmd=False):
-        process = self.debugger.run(args, fromCmd, self.runCfgWindow.arglist)
+    def do_run(self, args=None, from_cmd=False):
+        """ on run command entered"""
+        process = self.debugger.run(args, from_cmd, self.cfg_window.arglist)
         if process is not None:
-            self.myListener.addProcessBroadcaster(process.GetBroadcaster())
+            self.my_listener.add_process_broadcaster(process.GetBroadcaster())
 
-    def doStepOver(self):
+    def do_step_over(self):
+        """ on step over clicked"""
         self.debugger.next(True)
 
-    def doStepInto(self):
+    def do_step_into(self):
+        """ on step into clicked"""
         self.debugger.next(False)
 
 class MyListeningThread(QThread):
+    """Listening events"""
     FocuseLine = pyqtSignal(str, int, name='FocuseLine')
     StateChanged = pyqtSignal(int, name='StateChanged')
 
     def __init__(self, dbg):
         QThread.__init__(self)
         self.dbg = dbg
-        self.dbgListener = dbg.GetListener()
+        self.sb_listener = dbg.GetListener()
         #self.stopped = False
-        self.processBroadcaster = None
-        self.targetBroadcaster = None
+        self.process_broadcaster = None
+        self.target_broadcaster = None
 
-    def addTargetBroadcaster(self, broadcaster):
+    def add_target_broadcaster(self, broadcaster):
+        """ add broadcaster for targget events"""
         mask = SBTarget.eBroadcastBitBreakpointChanged or SBTarget.eBroadcastBitModulesLoaded or \
-               SBTarget.eBroadcastBitModulesUnloaded or SBTarget.eBroadcastBitSymbolIsLoaded or \
+               SBTarget.eBroadcastBitModulesUnloaded or SBTarget.eBroadcastBitSymbolsLoaded or \
                SBTarget.eBroadcastBitWatchpointChanged
-        self.targetBroadcaster = broadcaster
-        broadcaster.AddListener(self.dbgListener, mask)
-        self.dbgListener.StartListeningForEvents(broadcaster, mask)
+        self.target_broadcaster = broadcaster
+        broadcaster.AddListener(self.sb_listener, mask)
+        self.sb_listener.StartListeningForEvents(broadcaster, mask)
 
-    def addProcessBroadcaster(self, broadcaster):
+    def add_process_broadcaster(self, broadcaster):
+        """ add broadcaster for process events"""
         mask = SBProcess.eBroadcastBitStateChanged or \
                SBProcess.eBroadcastBitSTDERR or \
                SBProcess.eBroadcastBitSTDOUT or \
                lldb.SBProcess.eBroadcastBitInterrupt
-        broadcaster.AddListener(self.dbgListener, SBProcess.eBroadcastBitStateChanged)
-        self.dbgListener.StartListeningForEvents(broadcaster, mask)
-        self.processBroadcaster = broadcaster
+        broadcaster.AddListener(self.sb_listener, SBProcess.eBroadcastBitStateChanged)
+        self.sb_listener.StartListeningForEvents(broadcaster, mask)
+        self.process_broadcaster = broadcaster
 
     def run(self):
+        """ listerning loop"""
         event = SBEvent()
         ss = SBStream()
-        while self.dbgListener.IsValid():
-            self.dbgListener.WaitForEvent(1, event)
+        while self.sb_listener.IsValid():
+            self.sb_listener.WaitForEvent(1, event)
             if not event.IsValid():
                 event.Clear()
                 continue
@@ -241,32 +259,32 @@ class MyListeningThread(QThread):
                                 desc = ss.GetData()
                                 matched = re.search('file = \'(.*)\', line = (.*),', desc)
                                 if matched:
-                                    bpFileName = matched.group(1)
-                                    bpLineNo = int(matched.group(2))
-                                    self.FocuseLine.emit(bpFileName, int(bpLineNo))
+                                    bp_filename = matched.group(1)
+                                    bp_line_no = int(matched.group(2))
+                                    self.FocuseLine.emit(bp_filename, int(bp_line_no))
                                 logging.debug('stopped @ %s', desc)
                             else:
                                 bp_loc_id = thread.GetStopReasonDataAtIndex(1)
                                 bp_loc = bp.FindLocationByID(bp_loc_id)
-                                lineEntry = bp_loc.GetAddress().GetLineEntry()
-                                fileSpec = lineEntry.GetFileSpec()
-                                fileName = fileSpec.fullpath
-                                lineNo = lineEntry.GetLine()
-                                logging.debug('stopped @ %s:%d', fileName, lineNo)
-                                if fileName is not None:
-                                    self.FocuseLine.emit(fileName.fullpath, int(lineNo))
+                                line_entry = bp_loc.GetAddress().GetLineEntry()
+                                file_spec = line_entry.GetFileSpec()
+                                filename = file_spec.fullpath
+                                line_no = line_entry.GetLine()
+                                logging.debug('stopped @ %s:%d', filename, line_no)
+                                if filename is not None:
+                                    self.FocuseLine.emit(filename.fullpath, int(line_no))
                                 else:
                                     self.FocuseLine.emit(None, -1)
                         elif reason == lldb.eStopReasonWatchpoint or \
                              reason == lldb.eStopReasonPlanComplete:
                             frame = thread.GetFrameAtIndex(0)
-                            lineEntry = frame.GetLineEntry()
-                            fileSpec = lineEntry.GetFileSpec()
-                            fileName = fileSpec.fullpath
-                            lineNo = lineEntry.GetLine()
-                            logging.debug('stopped @ %s:%d', fileName, lineNo)
-                            if fileName is not None:
-                                self.FocuseLine.emit(fileName, int(lineNo))
+                            line_entry = frame.GetLineEntry()
+                            file_spec = line_entry.GetFileSpec()
+                            filename = file_spec.fullpath
+                            line_no = line_entry.GetLine()
+                            logging.debug('stopped @ %s:%d', filename, line_no)
+                            if filename is not None:
+                                self.FocuseLine.emit(filename, int(line_no))
                             break
                         elif reason == lldb.eStopReasonThreadExiting:
                             logging.debug('thread exit')
@@ -293,12 +311,6 @@ class MyListeningThread(QThread):
             logging.debug('Event desc: %s', ss.GetData())
             ss.Clear()
             event.Clear()
-
-def main():
-    app = QtGui.QApplication(sys.argv)
-    mainW = MainWindow()
-    mainW.show()
-    sys.exit(app.exec_())
 
 if __name__ == '__main__':
     main()

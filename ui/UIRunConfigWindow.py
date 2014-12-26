@@ -7,7 +7,6 @@ class RunConfigWindow(QDialog):
         super(RunConfigWindow, self).__init__()
         self.ui = Ui_DiagRunConfig()
         self.ui.setupUi(self)
-        self.args = ""
         self.arglist = []
         self.workDir = os.getcwd()
 
@@ -15,17 +14,18 @@ class RunConfigWindow(QDialog):
         self.ui.txtWorkDir.setText(self.workDir)
         self.ui.txtArgs.setPlainText(self.args)
 
-    def setArgStr(self, argStr):
-        self.ui.txtArgs.setPlainText(argStr)
+    def setArgStr(self, arg_str):
+        self.ui.txtArgs.setPlainText(arg_str)
+        self.args = arg_str
+        arg_line = str(self.args.replace("\n"," "))
+        self.arglist = arg_line.split()
 
     def setWorkingDir(self, txt):
-            self.ui.txtWorkDir.setText(txt)
+        self.ui.txtWorkDir.setText(txt)
 
     def accept(self):
-        self.args = self.ui.txtArgs.toPlainText()
+        self.setArgStr(self.ui.txtArgs.toPlainText())
         self.workDir = self.ui.txtWorkDir.text()
-        argLine = str(self.args.replace("\n"," "))
-        self.arglist = argLine.split()
         QDialog.accept(self)
 
 

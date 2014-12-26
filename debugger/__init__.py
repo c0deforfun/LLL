@@ -49,7 +49,7 @@ class Debugger(object):
         main_sym_ctx = sym_ctx_list[0]
         main_cu = main_sym_ctx.GetCompileUnit()
         main_file = main_cu.GetFileSpec()
-        self._my_listener.addTargetBroadcaster(self.target.GetBroadcaster())
+        self._my_listener.add_target_broadcaster(self.target.GetBroadcaster())
         return main_file
 
     def toggle_breakpoint(self, file_name, line_no):
@@ -128,7 +128,7 @@ class Debugger(object):
             args = default_args
         self._last_args = args
 
-        process = target.Launch(self._my_listener.dbgListener, args, env,
+        process = target.Launch(self._my_listener.sb_listener, args, env,
                                 stdin, self._stdout, self._stderr,
                                 self._workdir,
                                 0, #launch flags
