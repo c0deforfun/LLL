@@ -1,9 +1,7 @@
-LLL
-===
+LLL - A Lightweight LLDB Frontend based on PyQt
+---
 
-# A Lightweight LLDB Frontend based on PyQt
-
-# Motivation:
+## Motivation:
 Debugging in commandline is neighter user friendly nor productive. Users may not memorize all commands and debugging practice usually needs to monitoring source code, variable content, disassembles, etc. in the same time. It is also convenient to allow user to do some simple code modification during debugging session. However, it won't be an IDE as it won't support fancy syntax hightlighting, auto completion, building, source code project, etc.
 
 ## Goals:
@@ -30,3 +28,6 @@ Very basic debugging support
 
 ## Tested on:
 Linux Arch on x86-64
+
+## Screenshot:
+[Imgur](http://i.imgur.com/VnYSZ1s.png)
