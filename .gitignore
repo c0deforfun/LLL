@@ -56,6 +56,3 @@ target/
 # Project specific
 *.sw[op]
 sample/test
-UIMain.py
-UIRunConfig.py
-resources_rc.py
