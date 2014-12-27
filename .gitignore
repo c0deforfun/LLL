@@ -56,3 +56,4 @@ target/
 # Project specific
 *.sw[op]
 sample/test
+.idea

@@ -1,7 +1,6 @@
-import sys
-from PyQt4.QtGui import  QColor, QBrush, QTextEdit, QTextCursor, QTextCharFormat
-from clang.cindex import Config, TranslationUnit, TokenKind
-
+""" using clang to highlight keywords """
+from PyQt4.QtGui import  QColor, QBrush, QTextCursor, QTextCharFormat
+from clang.cindex import TranslationUnit, TokenKind
 
 """
 SOLARIZED HEX     16/8 TERMCOL  XTERM/HEX   L*A*B      RGB         HSB
@@ -21,9 +20,11 @@ magenta   #d33682  5/5 magenta  125 #af005f 50  65 -05 211  54 130 331  74  83
 violet    #6c71c4 13/5 brmagenta 61 #5f5faf 50  15 -45 108 113 196 237  45  77
 blue      #268bd2  4/4 blue      33 #0087ff 55 -10 -45  38 139 210 205  82  82  Identifier
 cyan      #2aa198  6/6 cyan      37 #00afaf 60 -35 -05  42 161 152 175  74  63  Constant
-green     #859900  2/2 green     64 #5f8700 60 -20  65 133 153   0  68 100  60  Keyword
-"""
-class Theme:
+green     #859900  2/2 green     64 #5f8700 60 -20  65 133 153   0  68 100  60  Keyword """
+
+
+class Theme(object):
+    """ define colors for different tokens """
     keyword = QTextCharFormat()
     keyword.setForeground(QBrush(QColor("#5f8700")))
     literal = QTextCharFormat()
@@ -36,45 +37,49 @@ class Theme:
     formats = {TokenKind.KEYWORD : keyword,
                TokenKind.LITERAL : literal,
                TokenKind.COMMENT: comment,
-               TokenKind.PUNCTUATION : normal, 
+               TokenKind.PUNCTUATION: normal,
                TokenKind.IDENTIFIER : normal}
 
     @staticmethod
-    def getFormat(kind):
+    def get_format(kind):
+        """ returns the QTextCharFormat for corresponding token kind """
         return Theme.formats[kind]
 
-class Highlighter:
+
+class Highlighter(object):
+    """ parsing the source file and applying formats """
     def __init__(self, text):
         self.text = text
         self.doc = text.document()
 
     def highlight(self, filename):
-        tu = TranslationUnit.from_source(filename)
-        cursor = tu.cursor
+        """ highlight the source file  """
+        cursor = TranslationUnit.from_source(filename).cursor
         children = cursor.get_children()
-        for c in children:
-            loc = c.location
-            fn  = loc.file
-            if str(fn) != filename:
+        for child in children:
+            loc = child.location
+            if str(loc.file) != filename:
                 continue
             tokens = cursor.get_tokens()
-            for t in tokens:
-                if t.kind == TokenKind.IDENTIFIER or t.kind == TokenKind.PUNCTUATION:
+            for token in tokens:
+                if token.kind == TokenKind.IDENTIFIER or token.kind == TokenKind.PUNCTUATION:
                     continue
-                self.hltext(t.kind, t.extent.start.line - 1, t.extent.start.column - 1,
-                            t.extent.end.line - 1 , t.extent.end.column - 1)
-    def hltext(self, kind, line, col, line2, col2):
-        #move to start
+                self._hltext(token.kind, token.extent.start.line - 1, token.extent.start.column - 1,
+                             token.extent.end.line - 1, token.extent.end.column - 1)
+
+    def _hltext(self, kind, line, col, line2, col2):
+        """ applying format """
+        # moving to start
         cursor = QTextCursor(self.doc.findBlockByLineNumber(line))
         if col == 0:
             cursor.movePosition(QTextCursor.StartOfBlock)
         else:
             cursor.movePosition(QTextCursor.Right, QTextCursor.MoveAnchor, col)
-        #moving to end
+        # moving to end
         if line == line2:
             cursor.movePosition(QTextCursor.Right, QTextCursor.KeepAnchor, col2 - col)
         else:
             cursor.movePosition(QTextCursor.NextBlock, QTextCursor.KeepAnchor, line2 - line)
             cursor.movePosition(QTextCursor.StartOfBlock, QTextCursor.KeepAnchor)
             cursor.movePosition(QTextCursor.Right, QTextCursor.KeepAnchor, col2)
-        cursor.mergeCharFormat(Theme.getFormat(kind))
+        cursor.mergeCharFormat(Theme.get_format(kind))

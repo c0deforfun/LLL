@@ -1,35 +1,49 @@
+""" for configuring working dir and args"""
 from PyQt4.QtGui import QDialog
-from UIRunConfig import Ui_DiagRunConfig
+from ui.UIRunConfig import Ui_DiagRunConfig
 import os
 
 class RunConfigWindow(QDialog):
+    """ Config window"""
     def __init__(self):
         super(RunConfigWindow, self).__init__()
         self.ui = Ui_DiagRunConfig()
         self.ui.setupUi(self)
-        self.arglist = []
-        self.workDir = os.getcwd()
+        self._arglist = []
+        self._working_dir = os.getcwd()
 
-    def reset(self):    
-        self.ui.txtWorkDir.setText(self.workDir)
-        self.ui.txtArgs.setPlainText(self.args)
+    def reset(self):
+        """ discard inputs """
+        self.ui.txtWorkDir.setText(self._working_dir)
+        self.ui.txtArgs.setPlainText(' '.join(self._arglist))
 
-    def setArgStr(self, arg_str):
-        self.ui.txtArgs.setPlainText(arg_str)
-        self.args = arg_str
-        arg_line = str(self.args.replace("\n"," "))
-        self.arglist = arg_line.split()
+    @property
+    def arglist(self):
+        return self._arglist
 
-    def setWorkingDir(self, txt):
+    @arglist.setter
+    def arglist(self, args):
+        """ set args from command line or this window"""
+        self._arglist = args
+        self.ui.txtArgs.setPlainText(' '.join(args))
+
+    @property
+    def working_dir(self):
+        return self._working_dir
+
+    @working_dir.setter
+    def working_dir(self, txt):
+        """ working directory"""
         self.ui.txtWorkDir.setText(txt)
 
     def accept(self):
-        self.setArgStr(self.ui.txtArgs.toPlainText())
-        self.workDir = self.ui.txtWorkDir.text()
+        """ OK """
+        args = str(self.ui.txtArgs.toPlainText()).replace("\n", " ")
+        self.arglist = args.split(' ')
+        self._working_dir = str(self.ui.txtWorkDir.text())
         QDialog.accept(self)
 
-
     def reject(self):
+        """ Cancel """
         self.reset()
         QDialog.reject(self)
-

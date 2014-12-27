@@ -8,37 +8,31 @@ from PyQt4.QtGui import QMessageBox
 from ptyview import PtyView
 import clang.cindex
 
-def main():
-    """ entry function"""
+def initialize():
+    """ read config file and initialize sys path etc."""
+    config = ConfigParser.RawConfigParser()
     curr_path = os.path.split(inspect.getfile(inspect.currentframe()))[0]
     cmd_folder = os.path.realpath(os.path.abspath(curr_path))
-    if cmd_folder not in sys.path:
-        sys.path.insert(0, cmd_folder)
 
-    config = ConfigParser.RawConfigParser()
-    config.read('lll.ini')
-    lldb_path = '../llvm/lib/python2.7/site-packages'
+    #search config file in: program's dir/lll.ini, ~/.lll.ini
+    config.read([cmd_folder + '/lll.ini', os.path.expanduser('~/.lll.ini')])
     logging_level = logging.INFO
     if config.has_section('common'):
         clang_lib_path = config.get('common', 'clang_lib_path')
         lldb_path = config.get('common', 'lldb_path')
         logging_level = config.get('common', 'logging_level')
-    sys.path.append(lldb_path)
-    clang.cindex.Config.set_library_path(clang_lib_path)
+        sys.path.append(lldb_path)
+        clang.cindex.Config.set_library_path(clang_lib_path)
     logging.basicConfig(level=logging_level)
-    app = QtGui.QApplication(sys.argv)
-    main_window = MainWindow()
-    main_window.show()
-    sys.exit(app.exec_())
 
-
+initialize()
 import lldb
 from lldb import SBTarget, SBProcess, SBEvent, \
                  SBStream, SBBreakpoint
+from debugger import Debugger
 from ui.UIMain import Ui_MainWindow
 from ui.codeEditor import CodeEditor
 from ui.UIRunConfigWindow import RunConfigWindow
-from debugger import Debugger
 
 class MainWindow(QtGui.QMainWindow):
     """ Main window of the debugger"""
@@ -49,7 +43,7 @@ class MainWindow(QtGui.QMainWindow):
         self.pty_stdout = PtyView(self.ui.commander)
         stdout_path = self.pty_stdout.get_file_path()
 
-        self.debugger = Debugger(stdout_path, stdout_path, self.cfg_window.workDir)
+        self.debugger = Debugger(stdout_path, stdout_path, self.cfg_window.working_dir)
         self.last_highlighted_editor = None
         self.my_listener = MyListeningThread(self.debugger.dbg)
         self.my_listener.FocuseLine.connect(self.do_focuse_line)
@@ -60,11 +54,11 @@ class MainWindow(QtGui.QMainWindow):
         self.opened_files = {}
 
         args = Qt.qApp.arguments()
-        self.cfg_window.setWorkingDir(os.getcwd())
+        self.cfg_window.working_dir = os.getcwd()
         if len(args) > 1:
             self.do_exe_file_open(args[1])
         if len(args) > 2:
-            self.cfg_window.setArgStr(' '.join([str(x) for x in args[2:]]))
+            self.cfg_window.arglist = [str(x) for x in args[2:]]
 
     def init_ui(self):
         """initialize UI"""
@@ -127,7 +121,7 @@ class MainWindow(QtGui.QMainWindow):
                 self.last_highlighted_editor.setExtraSelections([])
 
         if editor is not None:
-            editor.focuseLine(line_no)
+            editor.focuse_line(line_no)
             self.ui.tabCodeEditor.setCurrentWidget(editor)
 
         self.last_highlighted_editor = editor
@@ -153,14 +147,14 @@ class MainWindow(QtGui.QMainWindow):
 
         editor = CodeEditor()
         self.ui.tabCodeEditor.addTab(editor, os.path.basename(src_filename))
-        editor.openSourceFile(src_filename)
+        editor.open_source_file(src_filename)
         self.opened_files[str(src_filename)] = editor
-        editor.lineNumberArea.BPToggled.connect(self.toggle_breakpoint)
+        editor.line_number_area.BPToggled.connect(self.toggle_breakpoint)
 
     def toggle_breakpoint(self, line_no):
         """ control the bp toggling"""
         sender = self.sender()
-        filename = sender.fileName
+        filename = sender.filename
         sender.breakpoints = self.debugger.toggle_breakpoint(filename, line_no)
         sender.repaint()
 
@@ -311,6 +305,13 @@ class MyListeningThread(QThread):
             logging.debug('Event desc: %s', ss.GetData())
             ss.Clear()
             event.Clear()
+
+def main():
+    """ entry function"""
+    app = QtGui.QApplication(sys.argv)
+    main_window = MainWindow()
+    main_window.show()
+    sys.exit(app.exec_())
 
 if __name__ == '__main__':
     main()

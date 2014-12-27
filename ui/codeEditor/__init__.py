@@ -1,4 +1,4 @@
-import platform
+""" the widget for source code and side area"""
 
 from PyQt4.QtCore import QRect, pyqtSignal, pyqtSlot
 from PyQt4.QtGui import QAction, QApplication, QColor, QBrush, \
@@ -12,12 +12,13 @@ from ui.codeEditor.sideareas import LineNumberArea
 from ui.codeEditor.parser import Highlighter
 
 class CodeEditor(QPlainTextEdit):
+    """ the main widget for displaying source code"""
 
     def __init__(self, *args):
         QPlainTextEdit.__init__(self, *args)
 
-        self.lineNumberArea = LineNumberArea(self)
-        self.lineNumberArea.setObjectName('lineNumberArea') # Used for slot
+        self.line_number_area = LineNumberArea(self)
+        self.line_number_area.setObjectName('lineNumberArea') # Used for slot
 
         #TODO: color theme
         palette = self.palette()
@@ -27,35 +28,40 @@ class CodeEditor(QPlainTextEdit):
 
         self.highlighter = Highlighter(self)
 
-        self.blockCountChanged.connect(self.updateLineNumberAreaWidth)
-        self.updateRequest.connect(self.updateLineNumberArea)
-        self.currentFile = ''
+        self.blockCountChanged.connect(self._update_line_number_area_width)
+        self.updateRequest.connect(self._update_line_number_area)
+        self.source_file = ''
 
-    def openSourceFile(self, filePath):
-        self.currentFile = filePath
-        txt = open(self.currentFile).read()
+    def open_source_file(self, filename):
+        """open and show source file"""
+        self.source_file = filename
+        txt = open(self.source_file).read()
         self.setPlainText(txt)
-        self.highlighter.highlight(filePath)
+        self.highlighter.highlight(filename)
 
-    def updateLineNumberAreaWidth(self, newBlockCount):
-        self.setViewportMargins(self.lineNumberArea.width(), 0, 0, 0)
+    def _update_line_number_area_width(self):
+        """ change line number area width based on total lines"""
+        self.setViewportMargins(self.line_number_area.width(), 0, 0, 0)
 
-    def updateLineNumberArea(self, rect, dy):
-        if dy:
-            self.lineNumberArea.scroll(0, dy)
+    def _update_line_number_area(self, rect, pos_y):
+        """ update line number area"""
+        if pos_y:
+            self.line_number_area.scroll(0, pos_y)
         else:
-            self.lineNumberArea.update(0, rect.y(), self.lineNumberArea.width(), rect.height())
+            self.line_number_area.update(0, rect.y(), self.line_number_area.width(), rect.height())
 
     def resizeEvent(self, event):
+        """ overriding"""
         QPlainTextEdit.resizeEvent(self, event)
-
-        cr = self.contentsRect()
-        self.lineNumberArea.setGeometry(QRect(cr.left(), cr.top(), self.lineNumberArea.width(), cr.height()))
+        rect = self.contentsRect()
+        self.line_number_area.setGeometry(QRect(rect.left(), rect.top(),
+                                                self.line_number_area.width(), rect.height()))
 
     #@pyqtSlot(str, int, name = 'on_eventListener_FocuseLine')
-    def focuseLine(self, lineNo):
-        lineNo -= 1
-        cursor = QTextCursor(self.document().findBlockByLineNumber(lineNo))
+    def focuse_line(self, line_no):
+        """ highlight the line"""
+        line_no -= 1
+        cursor = QTextCursor(self.document().findBlockByLineNumber(line_no))
         cursor.clearSelection()
         highlight = QTextEdit.ExtraSelection()
         highlight.cursor = cursor
