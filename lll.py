@@ -2,9 +2,9 @@
 """Main controller of LLL
 """
 import sys, os, inspect, re, ConfigParser, logging
-from PyQt4.QtCore import QThread, pyqtSignal, pyqtSlot
+from PyQt4.QtCore import QThread, pyqtSignal
 from PyQt4 import QtGui, QtCore, Qt
-from PyQt4.QtGui import QMessageBox
+from PyQt4.QtGui import QMessageBox, QAction
 from ptyview import PtyView
 import clang.cindex
 
@@ -71,6 +71,7 @@ class MainWindow(QtGui.QMainWindow):
         self.connect(self.ui.action_Run, QtCore.SIGNAL('triggered()'), self.do_run)
         self.connect(self.ui.action_StepOver, QtCore.SIGNAL('triggered()'), self.do_step_over)
         self.connect(self.ui.action_StepInto, QtCore.SIGNAL('triggered()'), self.do_step_into)
+        self.ui.action_Exit.triggered.connect(Qt.qApp.quit)
         self.ui.commander.commandEntered.connect(self.do_command)
         self.connect(self.ui.action_Run_Config, QtCore.SIGNAL('triggered()'), self.do_config)
 
@@ -104,7 +105,6 @@ class MainWindow(QtGui.QMainWindow):
         else:
             logging.info('error opening executable: %s', exe_filename)
 
-    @pyqtSlot(str, int, name='on_eventListener_FocuseLine')
     def do_focuse_line(self, filename, line_no):
         """ slot for focuing line event"""
         if filename is None:

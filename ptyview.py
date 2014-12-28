@@ -15,7 +15,7 @@ class PtyView(QtCore.QThread):
         self.start()
         self.data_ready.connect(self.handle_data)
 
-    @QtCore.pyqtSlot(str)
+    #@QtCore.pyqtSlot(str)
     def handle_data(self, line):
         self.textWidget.append(line)
         self.textWidget.moveCursor(QtGui.QTextCursor.End)
