@@ -97,11 +97,14 @@ class MainWindow(QtGui.QMainWindow):
                 '', self.tr('Executable Files (*)'))
         if exe_filename is None:
             return
-        main_file = self.debugger.open_file(exe_filename)
+        main_file, line = self.debugger.open_file(exe_filename)
         if main_file is not None:
-            self.open_src_file(main_file.fullpath)
+            print("src:%s:%s") %(main_file, main_file.fullpath)
+            self.open_src_file(main_file.fullpath, line)
             self.ui.action_Run.setEnabled(True)
             self.my_listener.add_target_broadcaster(self.debugger.target.GetBroadcaster())
+        elif line == 0:
+            logging.info('cannot find entry function')
         else:
             logging.info('error opening executable: %s', exe_filename)
 
@@ -137,7 +140,7 @@ class MainWindow(QtGui.QMainWindow):
             self.ui.action_StepOver.setEnabled(process.is_alive)
             self.ui.action_StepInto.setEnabled(process.is_alive)
 
-    def open_src_file(self, src_filename):
+    def open_src_file(self, src_filename, line=0):
         """show the source file in editor"""
         if not os.path.isfile(src_filename) or not os.access(src_filename, os.R_OK):
             #TODO: show error message
@@ -150,6 +153,8 @@ class MainWindow(QtGui.QMainWindow):
         editor.open_source_file(src_filename)
         self.opened_files[str(src_filename)] = editor
         editor.line_number_area.BPToggled.connect(self.toggle_breakpoint)
+        if line > 0:
+            self.do_focuse_line(src_filename, line)
 
     def toggle_breakpoint(self, line_no):
         """ control the bp toggling"""
@@ -308,6 +313,7 @@ class MyListeningThread(QThread):
 
 def main():
     """ entry function"""
+    #QtGui.QApplication.setGraphicsSystem("native")
     app = QtGui.QApplication(sys.argv)
     main_window = MainWindow()
     main_window.show()

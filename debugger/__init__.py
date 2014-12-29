@@ -38,19 +38,29 @@ class Debugger(object):
         """ open the executable and create SBTarget and also find the
             main function"""
         if len(exe_file_name) == 0:
-            return None
+            return None, -1
         exe_file_name = str(exe_file_name)
         #TODO: check arch
         self.target = self.dbg.CreateTargetWithFileAndArch(exe_file_name, \
                                                          lldb.LLDB_ARCH_DEFAULT)
         if not self.target.IsValid():
-            return None
+            self.target = None
+            return None, -1
         sym_ctx_list = self.target.FindFunctions('main')
-        main_sym_ctx = sym_ctx_list[0]
-        main_cu = main_sym_ctx.GetCompileUnit()
-        main_file = main_cu.GetFileSpec()
+        if not sym_ctx_list.IsValid() or sym_ctx_list.GetSize() != 1:
+            return None, 0
+        main_sym_ctx = sym_ctx_list[0]#.GetFunction()
+        main_func = main_sym_ctx.GetFunction()
+        if not main_func.IsValid():
+            return None, 0
+        main_addr = main_func.GetStartAddress()
+        if not main_addr.IsValid():
+            return None, 0
+        line_entry = main_addr.GetLineEntry()
+        if not line_entry.IsValid():
+            return None, 0
         self._my_listener.add_target_broadcaster(self.target.GetBroadcaster())
-        return main_file
+        return line_entry.GetFileSpec(), line_entry.GetLine()
 
     def toggle_breakpoint(self, file_name, line_no):
         """ toggle a break point"""
