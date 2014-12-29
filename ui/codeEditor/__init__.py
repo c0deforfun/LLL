@@ -68,3 +68,4 @@ class CodeEditor(QPlainTextEdit):
         highlight.format.setProperty(QTextFormat.FullWidthSelection, True)
         highlight.format.setBackground(QBrush(QColor("#657b83")))
         self.setExtraSelections([highlight])
+        self.setTextCursor(cursor)

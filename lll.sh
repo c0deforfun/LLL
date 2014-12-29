@@ -21,5 +21,5 @@ if [[ $ver =~ 'Python 3.' ]];then
 	echo "LLL requires Python 2"
 	exit 1
 else
-	exec $python $dir/lll.py 
+	exec $python $dir/lll.py $@
 fi
