@@ -1,5 +1,7 @@
 <RCC>
   <qresource prefix="icons">
+    <file>icons/step_out.png</file>
+    <file>icons/frame.png</file>
     <file>icons/fix_bug.png</file>
     <file>icons/run.png</file>
     <file>icons/step_over.png</file>

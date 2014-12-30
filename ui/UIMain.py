@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/UIMain.ui'
 #
-# Created: Thu Dec 25 20:13:41 2014
+# Created: Mon Dec 29 21:10:00 2014
 #      by: PyQt4 UI code generator 4.11.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -55,7 +55,7 @@ class Ui_MainWindow(object):
         self.verticalLayout.addWidget(self.commander)
         MainWindow.setCentralWidget(self.centralWidget)
         self.menuBar = QtGui.QMenuBar(MainWindow)
-        self.menuBar.setGeometry(QtCore.QRect(0, 0, 873, 21))
+        self.menuBar.setGeometry(QtCore.QRect(0, 0, 873, 19))
         self.menuBar.setObjectName(_fromUtf8("menuBar"))
         self.menu_File = QtGui.QMenu(self.menuBar)
         self.menu_File.setObjectName(_fromUtf8("menu_File"))
@@ -65,11 +65,14 @@ class Ui_MainWindow(object):
         self.menu_Edit.setObjectName(_fromUtf8("menu_Edit"))
         self.menuRun = QtGui.QMenu(self.menuBar)
         self.menuRun.setObjectName(_fromUtf8("menuRun"))
+        self.menuView = QtGui.QMenu(self.menuBar)
+        self.menuView.setObjectName(_fromUtf8("menuView"))
         MainWindow.setMenuBar(self.menuBar)
         self.statusBar = QtGui.QStatusBar(MainWindow)
         self.statusBar.setObjectName(_fromUtf8("statusBar"))
         MainWindow.setStatusBar(self.statusBar)
         self.toolBar = QtGui.QToolBar(MainWindow)
+        self.toolBar.setEnabled(True)
         self.toolBar.setObjectName(_fromUtf8("toolBar"))
         MainWindow.addToolBar(QtCore.Qt.TopToolBarArea, self.toolBar)
         self.action_Open = QtGui.QAction(MainWindow)
@@ -119,6 +122,18 @@ class Ui_MainWindow(object):
         self.action_Continue.setObjectName(_fromUtf8("action_Continue"))
         self.action_Run_Config = QtGui.QAction(MainWindow)
         self.action_Run_Config.setObjectName(_fromUtf8("action_Run_Config"))
+        self.action_StepOut = QtGui.QAction(MainWindow)
+        self.action_StepOut.setCheckable(False)
+        self.action_StepOut.setEnabled(False)
+        icon5 = QtGui.QIcon()
+        icon5.addPixmap(QtGui.QPixmap(_fromUtf8(":/icons/icons/step_out.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.action_StepOut.setIcon(icon5)
+        self.action_StepOut.setObjectName(_fromUtf8("action_StepOut"))
+        self.actionFrames = QtGui.QAction(MainWindow)
+        icon6 = QtGui.QIcon()
+        icon6.addPixmap(QtGui.QPixmap(_fromUtf8(":/icons/icons/frame.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.actionFrames.setIcon(icon6)
+        self.actionFrames.setObjectName(_fromUtf8("actionFrames"))
         self.menu_File.addAction(self.action_Open)
         self.menu_File.addAction(self.action_Exit)
         self.menu_Help.addAction(self.action_About)
@@ -135,11 +150,15 @@ class Ui_MainWindow(object):
         self.menuBar.addAction(self.menu_File.menuAction())
         self.menuBar.addAction(self.menu_Edit.menuAction())
         self.menuBar.addAction(self.menuRun.menuAction())
+        self.menuBar.addAction(self.menuView.menuAction())
         self.menuBar.addAction(self.menu_Help.menuAction())
         self.toolBar.addAction(self.action_Open)
         self.toolBar.addAction(self.action_Run)
         self.toolBar.addAction(self.action_StepOver)
         self.toolBar.addAction(self.action_StepInto)
+        self.toolBar.addAction(self.action_StepOut)
+        self.toolBar.addSeparator()
+        self.toolBar.addAction(self.actionFrames)
 
         self.retranslateUi(MainWindow)
         self.tabCodeEditor.setCurrentIndex(-1)
@@ -151,6 +170,7 @@ class Ui_MainWindow(object):
         self.menu_Help.setTitle(_translate("MainWindow", "&Help", None))
         self.menu_Edit.setTitle(_translate("MainWindow", "&Edit", None))
         self.menuRun.setTitle(_translate("MainWindow", "&Run", None))
+        self.menuView.setTitle(_translate("MainWindow", "View", None))
         self.toolBar.setWindowTitle(_translate("MainWindow", "toolBar", None))
         self.action_Open.setText(_translate("MainWindow", "&Open...", None))
         self.action_Save.setText(_translate("MainWindow", "&Save", None))
@@ -171,6 +191,8 @@ class Ui_MainWindow(object):
         self.action_StepOver.setShortcut(_translate("MainWindow", "F2", None))
         self.action_Continue.setText(_translate("MainWindow", "Continue", None))
         self.action_Run_Config.setText(_translate("MainWindow", "Run Config ...", None))
+        self.action_StepOut.setText(_translate("MainWindow", "Step Out", None))
+        self.actionFrames.setText(_translate("MainWindow", "Frames", None))
 
 from ui.codeEditor.commandwindow import CommandWindow
 import resources_rc

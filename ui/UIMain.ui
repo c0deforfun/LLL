@@ -59,7 +59,7 @@
      <x>0</x>
      <y>0</y>
      <width>873</width>
-     <height>21</height>
+     <height>19</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_File">
@@ -95,13 +95,22 @@
     <addaction name="action_StepOver"/>
     <addaction name="action_Continue"/>
    </widget>
+   <widget class="QMenu" name="menuView">
+    <property name="title">
+     <string>View</string>
+    </property>
+   </widget>
    <addaction name="menu_File"/>
    <addaction name="menu_Edit"/>
    <addaction name="menuRun"/>
+   <addaction name="menuView"/>
    <addaction name="menu_Help"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <widget class="QToolBar" name="toolBar">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
    <property name="windowTitle">
     <string>toolBar</string>
    </property>
@@ -115,6 +124,9 @@
    <addaction name="action_Run"/>
    <addaction name="action_StepOver"/>
    <addaction name="action_StepInto"/>
+   <addaction name="action_StepOut"/>
+   <addaction name="separator"/>
+   <addaction name="actionFrames"/>
   </widget>
   <action name="action_Open">
    <property name="icon">
@@ -231,6 +243,30 @@
   <action name="action_Run_Config">
    <property name="text">
     <string>Run Config ...</string>
+   </property>
+  </action>
+  <action name="action_StepOut">
+   <property name="checkable">
+    <bool>false</bool>
+   </property>
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/icons/step_out.png</normaloff>:/icons/icons/step_out.png</iconset>
+   </property>
+   <property name="text">
+    <string>Step Out</string>
+   </property>
+  </action>
+  <action name="actionFrames">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/icons/frame.png</normaloff>:/icons/icons/frame.png</iconset>
+   </property>
+   <property name="text">
+    <string>Frames</string>
    </property>
   </action>
  </widget>

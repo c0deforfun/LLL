@@ -175,6 +175,12 @@ class Debugger(object):
         else:
             thread.StepInto()
 
+    def step_out(self):
+        """ step out"""
+        thread = self.curr_thread
+        if thread is not None:
+            thread.StepOut()
+
     def finish(self):
         """ Finish the frame """
         thread = self.curr_thread

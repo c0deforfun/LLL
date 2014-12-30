@@ -71,6 +71,8 @@ class MainWindow(QtGui.QMainWindow):
         self.connect(self.ui.action_Run, QtCore.SIGNAL('triggered()'), self.do_run)
         self.connect(self.ui.action_StepOver, QtCore.SIGNAL('triggered()'), self.do_step_over)
         self.connect(self.ui.action_StepInto, QtCore.SIGNAL('triggered()'), self.do_step_into)
+        self.connect(self.ui.action_StepOut, QtCore.SIGNAL('triggered()'), self.do_step_out)
+
         self.ui.action_Exit.triggered.connect(Qt.qApp.quit)
         self.ui.commander.commandEntered.connect(self.do_command)
         self.connect(self.ui.action_Run_Config, QtCore.SIGNAL('triggered()'), self.do_config)
@@ -139,6 +141,7 @@ class MainWindow(QtGui.QMainWindow):
         if process is not None:
             self.ui.action_StepOver.setEnabled(process.is_alive)
             self.ui.action_StepInto.setEnabled(process.is_alive)
+            self.ui.action_StepOut.setEnabled(process.is_alive)
 
     def open_src_file(self, src_filename, line=0):
         """show the source file in editor"""
@@ -181,6 +184,11 @@ class MainWindow(QtGui.QMainWindow):
     def do_step_into(self):
         """ on step into clicked"""
         self.debugger.next(False)
+
+    def do_step_out(self):
+        """ on step out of frame"""
+        print("on step out")
+        self.debugger.step_out()
 
 class MyListeningThread(QThread):
     """Listening events"""
