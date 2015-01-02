@@ -46,7 +46,7 @@ class MainWindow(QtGui.QMainWindow):
         self.debugger = Debugger(stdout_path, stdout_path, self.cfg_window.working_dir)
         self.last_highlighted_editor = None
         self.my_listener = MyListeningThread(self.debugger.dbg)
-        self.my_listener.FocuseLine.connect(self.do_focuse_line)
+        self.my_listener.FocusLine.connect(self.do_focus_line)
         self.my_listener.StateChanged.connect(self.on_state_changed)
         self.debugger.listener = self.my_listener
         self.my_listener.start()
@@ -67,11 +67,26 @@ class MainWindow(QtGui.QMainWindow):
         self.ui.tabCodeEditor.clear()
         self.ui.tabCodeEditor.setTabsClosable(True)
         self.ui.tabCodeEditor.setTabShape(QtGui.QTabWidget.Triangular)
+        self.action_Frames = self.ui.frame_dock.toggleViewAction()
+        self.ui.menuView.addAction(self.action_Frames)
+        self.action_Frames.setCheckable(True)
+        icon1 = QtGui.QIcon()
+        icon1.addPixmap(QtGui.QPixmap((":/icons/icons/frame.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.action_Frames.setIcon(icon1)
+
+        layout = QtGui.QVBoxLayout()
+        layout.addWidget(self.ui.frame_viewer)
+        self.ui.dockWidgetContents.setLayout(layout)
+        self.ui.frame_viewer.headerHidden = True
+        self.ui.frame_viewer.header().hide()
+        self.ui.frame_viewer.expandToDepth(1)
+
         self.connect(self.ui.action_Open, QtCore.SIGNAL('triggered()'), self.do_exe_file_open)
         self.connect(self.ui.action_Run, QtCore.SIGNAL('triggered()'), self.do_run)
         self.connect(self.ui.action_StepOver, QtCore.SIGNAL('triggered()'), self.do_step_over)
         self.connect(self.ui.action_StepInto, QtCore.SIGNAL('triggered()'), self.do_step_into)
         self.connect(self.ui.action_StepOut, QtCore.SIGNAL('triggered()'), self.do_step_out)
+        self.connect(self.ui.action_Frames, QtCore.SIGNAL('triggered()'), self.do_frames)
 
         self.ui.action_Exit.triggered.connect(Qt.qApp.quit)
         self.ui.commander.commandEntered.connect(self.do_command)
@@ -95,8 +110,8 @@ class MainWindow(QtGui.QMainWindow):
         """open executable"""
         if not exe_filename:
             exe_filename = QtGui.QFileDialog.getOpenFileName(self, \
-                self.tr('Open Executable'), \
-                '', self.tr('Executable Files (*)'))
+                                                             self.tr('Open Executable'), \
+                                                             '', self.tr('Executable Files (*)'))
         if exe_filename is None:
             return
         main_file, line = self.debugger.open_file(exe_filename)
@@ -110,8 +125,8 @@ class MainWindow(QtGui.QMainWindow):
         else:
             logging.info('error opening executable: %s', exe_filename)
 
-    def do_focuse_line(self, filename, line_no):
-        """ slot for focuing line event"""
+    def do_focus_line(self, filename, line_no):
+        """ slot for focusing line event"""
         if filename is None:
             editor = None
         else:
@@ -126,22 +141,66 @@ class MainWindow(QtGui.QMainWindow):
                 self.last_highlighted_editor.setExtraSelections([])
 
         if editor is not None:
-            editor.focuse_line(line_no)
+            editor.focus_line(line_no)
             self.ui.tabCodeEditor.setCurrentWidget(editor)
 
         self.last_highlighted_editor = editor
 
+    def update_frame_info(self):
+        if not self.action_Frames.isChecked():
+            return
+        process = self.debugger.curr_process
+        if process is None or not process.is_alive:
+            return
+
+        frame_data = QtGui.QStandardItemModel()
+        root = frame_data.invisibleRootItem()
+        #if process.num_of_threads == 1:
+        for thread in process:
+            thread_name = thread.GetName()
+            thread_row = QtGui.QStandardItem(thread_name)
+            root.appendRow(thread_row)
+            for frame in thread:
+                frame_info = '#%d: ' % frame.idx
+                if frame.name:
+                    frame_info += frame.name
+                    args = ','.join(map(str, frame.args))
+                    frame_info += ' (%s)' % args
+                line = frame.line_entry
+                if line:
+                    file_info = ' at %s:%d' % (str(line.GetFileSpec()), line.GetLine())
+                    frame_info += file_info
+                else:
+                    frame_info += str(frame.module.GetFileSpec())
+                if frame.is_inlined:
+                    frame_info += ' (inlined)'
+
+
+                print("Frame %s") %(str(frame))
+                thread_row.appendRow(QtGui.QStandardItem(frame_info))
+        self.ui.frame_viewer.setModel(frame_data)
+        self.ui.frame_viewer.expandToDepth(1)
+
     def on_state_changed(self, state):
         """slot for state change event"""
+        process = self.debugger.curr_process
+        steppable = process is not None and process.is_alive
+        if process is not None:
+            self.ui.action_StepOver.setEnabled(steppable)
+            self.ui.action_StepInto.setEnabled(steppable)
+            self.ui.action_StepOut.setEnabled(steppable)
+
         if state == lldb.eStateExited or state == lldb.eStateCrashed \
            or state == lldb.eStateSuspended:
-            self.do_focuse_line(None, -1)
-
-        process = self.debugger.curr_process
-        if process is not None:
-            self.ui.action_StepOver.setEnabled(process.is_alive)
-            self.ui.action_StepInto.setEnabled(process.is_alive)
-            self.ui.action_StepOut.setEnabled(process.is_alive)
+            self.do_focus_line(None, -1)
+        if state == lldb.eStateExited:
+            if process is not None:
+                logging.info('process exited: [%d]:%s', process.GetExitStatus(),
+                             process.GetExitDescription())
+            return
+        self.update_frame_info()
+        if state == lldb.eStateCrashed:
+            logging.info('crashed')
 
     def open_src_file(self, src_filename, line=0):
         """show the source file in editor"""
@@ -157,7 +216,7 @@ class MainWindow(QtGui.QMainWindow):
         self.opened_files[str(src_filename)] = editor
         editor.line_number_area.BPToggled.connect(self.toggle_breakpoint)
         if line > 0:
-            self.do_focuse_line(src_filename, line)
+            self.do_focus_line(src_filename, line)
 
     def toggle_breakpoint(self, line_no):
         """ control the bp toggling"""
@@ -187,12 +246,17 @@ class MainWindow(QtGui.QMainWindow):
 
     def do_step_out(self):
         """ on step out of frame"""
-        print("on step out")
         self.debugger.step_out()
+
+    def do_frames(self):
+        if self.ui.action_Frames.isChecked():
+            pass
+        else:
+            pass
 
 class MyListeningThread(QThread):
     """Listening events"""
-    FocuseLine = pyqtSignal(str, int, name='FocuseLine')
+    FocusLine = pyqtSignal(str, int, name='FocusLine')
     StateChanged = pyqtSignal(int, name='StateChanged')
 
     def __init__(self, dbg):
@@ -250,7 +314,7 @@ class MyListeningThread(QThread):
                 elif state == lldb.eStateRunning:
                     logging.debug('running')
                 elif state == lldb.eStateStopped:
-                    logging.debug('stopped')
+                    logging.debug('process stopped')
 
                     for thread in process:
                         reason = thread.GetStopReason()
@@ -268,7 +332,7 @@ class MyListeningThread(QThread):
                                 if matched:
                                     bp_filename = matched.group(1)
                                     bp_line_no = int(matched.group(2))
-                                    self.FocuseLine.emit(bp_filename, int(bp_line_no))
+                                    self.FocusLine.emit(bp_filename, int(bp_line_no))
                                 logging.debug('stopped @ %s', desc)
                             else:
                                 bp_loc_id = thread.GetStopReasonDataAtIndex(1)
@@ -279,9 +343,9 @@ class MyListeningThread(QThread):
                                 line_no = line_entry.GetLine()
                                 logging.debug('stopped @ %s:%d', filename, line_no)
                                 if filename is not None:
-                                    self.FocuseLine.emit(filename.fullpath, int(line_no))
+                                    self.FocusLine.emit(filename.fullpath, int(line_no))
                                 else:
-                                    self.FocuseLine.emit(None, -1)
+                                    self.FocusLine.emit(None, -1)
                         elif reason == lldb.eStopReasonWatchpoint or \
                              reason == lldb.eStopReasonPlanComplete:
                             frame = thread.GetFrameAtIndex(0)
@@ -291,7 +355,7 @@ class MyListeningThread(QThread):
                             line_no = line_entry.GetLine()
                             logging.debug('stopped @ %s:%d', filename, line_no)
                             if filename is not None:
-                                self.FocuseLine.emit(filename, int(line_no))
+                                self.FocusLine.emit(filename, int(line_no))
                             break
                         elif reason == lldb.eStopReasonThreadExiting:
                             logging.debug('thread exit')
@@ -302,10 +366,7 @@ class MyListeningThread(QThread):
                         elif reason == lldb.eStopReasonExec:
                             logging.debug('re-run')
 
-                elif state == lldb.eStateExited:
-                    logging.debug('exited')
-                elif state == lldb.eStateCrashed:
-                    logging.debug('crashed')
+
                 elif state == lldb.eStateSuspended:
                     logging.debug('suspended')
                 elif state == lldb.eStateStepping:

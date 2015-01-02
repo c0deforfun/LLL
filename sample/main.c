@@ -42,7 +42,7 @@ int main(int argc, char** argv) {
         printf("arg[%i]=%s\n", i, argv[i]);
 
 	sleep(argc);
-	i = foo(1,2);
+	i = foo(argc,2);
 	printf("hello :%d\n", i);
 	return 0;
 }

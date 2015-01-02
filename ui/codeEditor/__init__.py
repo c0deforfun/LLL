@@ -57,8 +57,7 @@ class CodeEditor(QPlainTextEdit):
         self.line_number_area.setGeometry(QRect(rect.left(), rect.top(),
                                                 self.line_number_area.width(), rect.height()))
 
-    #@pyqtSlot(str, int, name = 'on_eventListener_FocuseLine')
-    def focuse_line(self, line_no):
+    def focus_line(self, line_no):
         """ highlight the line"""
         line_no -= 1
         cursor = QTextCursor(self.document().findBlockByLineNumber(line_no))
