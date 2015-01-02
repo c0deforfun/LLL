@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/UIMain.ui'
 #
-# Created: Wed Dec 31 20:18:40 2014
+# Created: Thu Jan  1 21:29:46 2015
 #      by: PyQt4 UI code generator 4.11.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -81,7 +81,7 @@ class Ui_MainWindow(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.frame_dock.sizePolicy().hasHeightForWidth())
         self.frame_dock.setSizePolicy(sizePolicy)
-        self.frame_dock.setMinimumSize(QtCore.QSize(0, 0))
+        self.frame_dock.setMinimumSize(QtCore.QSize(70, 36))
         icon1 = QtGui.QIcon()
         icon1.addPixmap(QtGui.QPixmap(_fromUtf8(":/icons/icons/frame.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.frame_dock.setWindowIcon(icon1)
@@ -91,7 +91,14 @@ class Ui_MainWindow(object):
         self.dockWidgetContents.setObjectName(_fromUtf8("dockWidgetContents"))
         self.frame_viewer = QtGui.QTreeView(self.dockWidgetContents)
         self.frame_viewer.setGeometry(QtCore.QRect(50, 50, 256, 192))
+        self.frame_viewer.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+        self.frame_viewer.setAutoScroll(True)
+        self.frame_viewer.setHorizontalScrollMode(QtGui.QAbstractItemView.ScrollPerPixel)
+        self.frame_viewer.setWordWrap(False)
+        self.frame_viewer.setHeaderHidden(False)
         self.frame_viewer.setObjectName(_fromUtf8("frame_viewer"))
+        self.frame_viewer.header().setVisible(True)
+        self.frame_viewer.header().setCascadingSectionResizes(False)
         self.frame_dock.setWidget(self.dockWidgetContents)
         MainWindow.addDockWidget(QtCore.Qt.DockWidgetArea(2), self.frame_dock)
         self.action_Open = QtGui.QAction(MainWindow)

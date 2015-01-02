@@ -75,10 +75,13 @@ class MainWindow(QtGui.QMainWindow):
         self.action_Frames.setIcon(icon1)
 
         layout = QtGui.QVBoxLayout()
+        #scroll_area = QtGui.QScrollArea()
+        #scroll_area.setWidget(self.ui.frame_viewer)
         layout.addWidget(self.ui.frame_viewer)
+        #layout.addWidget(scroll_area)
         self.ui.dockWidgetContents.setLayout(layout)
-        self.ui.frame_viewer.headerHidden = True
-        self.ui.frame_viewer.header().hide()
+        #self.ui.frame_viewer.headerHidden = True
+        #self.ui.frame_viewer.header().hide()
         self.ui.frame_viewer.expandToDepth(1)
 
         self.connect(self.ui.action_Open, QtCore.SIGNAL('triggered()'), self.do_exe_file_open)
@@ -154,18 +157,23 @@ class MainWindow(QtGui.QMainWindow):
             return
 
         frame_data = QtGui.QStandardItemModel()
+        frame_data.setColumnCount(2)
+        frame_data.setHorizontalHeaderLabels(['',''])
         root = frame_data.invisibleRootItem()
         #if process.num_of_threads == 1:
         for thread in process:
             thread_name = thread.GetName()
             thread_row = QtGui.QStandardItem(thread_name)
-            root.appendRow(thread_row)
-            for frame in thread:
-                frame_info = '#%d: ' % frame.idx
+            thread_row.setEditable(False)
+            root.appendRow([thread_row, None])
+            for frame in reversed(thread.frames):
+                frame_idx = '#%d: ' % frame.idx
+                frame_info =''
                 if frame.name:
-                    frame_info += frame.name
+                    frame_idx += frame.name
                     args = ','.join(map(str, frame.args))
                     frame_info += ' (%s)' % args
+
                 line = frame.line_entry
                 if line:
                     file_info = ' at %s:%d' % (str(line.GetFileSpec()), line.GetLine())
@@ -174,11 +182,18 @@ class MainWindow(QtGui.QMainWindow):
                     frame_info += str(frame.module.GetFileSpec())
                 if frame.is_inlined:
                     frame_info += ' (inlined)'
-
-
                 print("Frame %s") %(str(frame))
-                thread_row.appendRow(QtGui.QStandardItem(frame_info))
+                col_idx = QtGui.QStandardItem(frame_idx)
+                col_idx.setEditable(False)
+                col_info = QtGui.QStandardItem(frame_info)
+                col_info.setEditable(False)
+                thread_row.appendRow([col_idx, col_info])
+
         self.ui.frame_viewer.setModel(frame_data)
+        self.ui.frame_viewer.resizeColumnToContents(1)
+        self.ui.frame_viewer.setAutoScroll(True)
+        #self.ui.frame_viewer.resizeColumnToContents(1)
+        #.ui.frame_viewer.resizeColumnToContents(2)
         self.ui.frame_viewer.expandToDepth(1)
 
     def on_state_changed(self, state):
