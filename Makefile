@@ -1,3 +1,5 @@
+PY_INSTALLER=../PyInstaller-2.1/pyinstaller.py
+
 gen := ui/UIMain.py ui/UIRunConfig.py ui/UIAbout.py ui/resources_rc.py
 
 all: $(gen)
@@ -9,9 +11,14 @@ test: test.c
 %_rc.py: %.qrc
 	pyrcc4 $< -o $@
 
-.PHONY: clean cleanall
+.PHONY: clean cleanall dist
+
+dist: lll.py
+	$(PY_INSTALLER) -F --hidden-import=uuid --hidden-import=code --hidden-import=codeop $<
+
+
 clean:
 	find . -name '*.pyc' -exec rm -f '{}' \;
 
 cleanall: clean
-	rm -f ui/UIMain.py ui/UIRunConfig.py
+	rm -f $(gen) dist build
