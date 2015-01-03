@@ -1,4 +1,4 @@
-gen := ui/UIMain.py ui/UIRunConfig.py ui/resources_rc.py
+gen := ui/UIMain.py ui/UIRunConfig.py ui/UIAbout.py ui/resources_rc.py
 
 all: $(gen)
 test: test.c

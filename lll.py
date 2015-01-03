@@ -33,6 +33,7 @@ from debugger import Debugger
 from ui.UIMain import Ui_MainWindow
 from ui.codeEditor import CodeEditor
 from ui.UIRunConfigWindow import RunConfigWindow
+from ui.About import AboutDialog
 
 class MainWindow(QtGui.QMainWindow):
     """ Main window of the debugger"""
@@ -40,6 +41,7 @@ class MainWindow(QtGui.QMainWindow):
         QtGui.QMainWindow.__init__(self)
         self.init_ui()
         self.cfg_window = RunConfigWindow()
+        self.about_dialog = AboutDialog()
         self.pty_stdout = PtyView(self.ui.commander)
         stdout_path = self.pty_stdout.get_file_path()
 
@@ -94,6 +96,7 @@ class MainWindow(QtGui.QMainWindow):
         self.ui.action_Exit.triggered.connect(Qt.qApp.quit)
         self.ui.commander.commandEntered.connect(self.do_command)
         self.connect(self.ui.action_Run_Config, QtCore.SIGNAL('triggered()'), self.do_config)
+        self.connect(self.ui.action_About, QtCore.SIGNAL('triggered()'), self.show_about)
 
     def closeEvent(self, event):
         """when close event is triggered"""
@@ -104,6 +107,10 @@ class MainWindow(QtGui.QMainWindow):
             event.accept()
         else:
             event.ignore()
+
+    def show_about(self):
+        """ show "About" window"""
+        self.about_dialog.show()
 
     def do_config(self):
         """show run-config window"""
