@@ -206,11 +206,12 @@ class MainWindow(QtGui.QMainWindow):
     def on_state_changed(self, state):
         """slot for state change event"""
         process = self.debugger.curr_process
-        steppable = process is not None and process.is_alive
+        steppable = process is not None and process.is_alive and state != lldb.eStateRunning
         if process is not None:
             self.ui.action_StepOver.setEnabled(steppable)
             self.ui.action_StepInto.setEnabled(steppable)
             self.ui.action_StepOut.setEnabled(steppable)
+        self.ui.action_Run.setEnabled(state!=lldb.eStateRunning)
 
         if state == lldb.eStateExited or state == lldb.eStateCrashed \
            or state == lldb.eStateSuspended:
@@ -387,8 +388,6 @@ class MyListeningThread(QThread):
 
                         elif reason == lldb.eStopReasonExec:
                             logging.debug('re-run')
-
-
                 elif state == lldb.eStateSuspended:
                     logging.debug('suspended')
                 elif state == lldb.eStateStepping:

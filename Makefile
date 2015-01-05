@@ -14,8 +14,8 @@ test: test.c
 .PHONY: clean cleanall dist
 
 dist: lll.py
-	$(PY_INSTALLER) -F --hidden-import=uuid --hidden-import=code --hidden-import=codeop $<
-
+	rm -fr dist
+	$(PY_INSTALLER) --hidden-import=uuid --hidden-import=code --hidden-import=codeop $<
 
 clean:
 	find . -name '*.pyc' -exec rm -f '{}' \;
