@@ -92,6 +92,7 @@ class MainWindow(QtGui.QMainWindow):
         self.connect(self.ui.action_StepInto, QtCore.SIGNAL('triggered()'), self.do_step_into)
         self.connect(self.ui.action_StepOut, QtCore.SIGNAL('triggered()'), self.do_step_out)
         self.connect(self.ui.action_Frames, QtCore.SIGNAL('triggered()'), self.do_frames)
+        self.connect(self.ui.frame_viewer, QtCore.SIGNAL('activated(const QModelIndex&)'), self.select_frame)
 
         self.ui.action_Exit.triggered.connect(Qt.qApp.quit)
         self.ui.commander.commandEntered.connect(self.do_command)
@@ -156,6 +157,8 @@ class MainWindow(QtGui.QMainWindow):
 
         self.last_highlighted_editor = editor
 
+    def select_frame(self, idx):
+        print("idx is %s") (str(idx))
     def update_frame_info(self):
         if not self.action_Frames.isChecked():
             return
@@ -170,6 +173,8 @@ class MainWindow(QtGui.QMainWindow):
         #if process.num_of_threads == 1:
         for thread in process:
             thread_name = thread.GetName()
+            if not thread_name:
+                thread_name = '[No Thread]'
             thread_row = QtGui.QStandardItem(thread_name)
             thread_row.setEditable(False)
             root.appendRow([thread_row, None])
@@ -347,28 +352,19 @@ class MyListeningThread(QThread):
                             logging.debug('bp_id:%s', bp_id)
                             bp = target.FindBreakpointByID(int(bp_id))
                             if bp.GetNumLocations() == 1:
-                                ss = SBStream()
-                                ss.Clear()
-                                bp.GetDescription(ss)
-                                desc = ss.GetData()
-                                matched = re.search('file = \'(.*)\', line = (.*),', desc)
-                                if matched:
-                                    bp_filename = matched.group(1)
-                                    bp_line_no = int(matched.group(2))
-                                    self.FocusLine.emit(bp_filename, int(bp_line_no))
-                                logging.debug('stopped @ %s', desc)
+                                bp_loc = bp.GetLocationAtIndex(0)
                             else:
                                 bp_loc_id = thread.GetStopReasonDataAtIndex(1)
                                 bp_loc = bp.FindLocationByID(bp_loc_id)
-                                line_entry = bp_loc.GetAddress().GetLineEntry()
-                                file_spec = line_entry.GetFileSpec()
-                                filename = file_spec.fullpath
-                                line_no = line_entry.GetLine()
-                                logging.debug('stopped @ %s:%d', filename, line_no)
-                                if filename is not None:
-                                    self.FocusLine.emit(filename.fullpath, int(line_no))
-                                else:
-                                    self.FocusLine.emit(None, -1)
+                            line_entry = bp_loc.GetAddress().GetLineEntry()
+                            file_spec = line_entry.GetFileSpec()
+                            filename = file_spec.fullpath
+                            line_no = line_entry.GetLine()
+                            logging.debug('stopped @ %s:%d', filename, line_no)
+                            if filename is not None:
+                                self.FocusLine.emit(filename, int(line_no))
+                            else:
+                                self.FocusLine.emit(None, -1)
                         elif reason == lldb.eStopReasonWatchpoint or \
                              reason == lldb.eStopReasonPlanComplete:
                             frame = thread.GetFrameAtIndex(0)
