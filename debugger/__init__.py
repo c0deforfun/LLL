@@ -94,7 +94,6 @@ class Debugger(object):
 
     def execute(self, cmd):
         """do the 'execute' command """
-        cmd = str(cmd)
         cmds = cmd.split()
         cmd0 = ''
         cmd1 = ''
@@ -102,16 +101,6 @@ class Debugger(object):
             cmd0 = cmds[0].lower()
             if not self._cmd_interp.CommandExists(cmd0) and not self._cmd_interp.AliasExists(cmd0):
                 return 'Invalid cmd ' + cmd0
-
-        if len(cmds) > 1:
-            cmd1 = cmds[1].lower()
-        if cmd0 == 'r' or cmd0 == 'run' or (cmd0 == 'process' and cmd1 == 'launch'):
-            if cmd0[0] == 'r':
-                args = cmds[1:]
-            else:
-                args = cmds[2:]
-            self.run(args, True)
-            return ''
 
         res = SBCommandReturnObject() #TODO:global?
         self._cmd_interp.HandleCommand(cmd, res, True)
@@ -129,6 +118,7 @@ class Debugger(object):
         err = SBError()
         env = None
         stdin = None
+
         if from_cmd:
             if args is None or len(args) == 0:
                 args = self._last_args

@@ -127,7 +127,6 @@ class MainWindow(QtGui.QMainWindow):
             return
         main_file, line = self.debugger.open_file(exe_filename)
         if main_file is not None:
-            print("src:%s:%s") %(main_file, main_file.fullpath)
             self.open_src_file(main_file.fullpath, line)
             self.ui.action_Run.setEnabled(True)
             self.my_listener.add_target_broadcaster(self.debugger.target.GetBroadcaster())
@@ -159,6 +158,7 @@ class MainWindow(QtGui.QMainWindow):
 
     def select_frame(self, idx):
         print("idx is %s") (str(idx))
+
     def update_frame_info(self):
         if not self.action_Frames.isChecked():
             return
@@ -194,7 +194,6 @@ class MainWindow(QtGui.QMainWindow):
                     frame_info += str(frame.module.GetFileSpec())
                 if frame.is_inlined:
                     frame_info += ' (inlined)'
-                print("Frame %s") %(str(frame))
                 col_idx = QtGui.QStandardItem(frame_idx)
                 col_idx.setEditable(False)
                 col_info = QtGui.QStandardItem(frame_info)
@@ -255,7 +254,22 @@ class MainWindow(QtGui.QMainWindow):
 
     def do_command(self, cmd):
         """ on command entered"""
-        msg = self.debugger.execute(cmd)
+        cmd = str(cmd)
+        cmds = cmd.split()
+        cmd0 = ''
+        cmd1 = ''
+        if len(cmds) > 0:
+            cmd0 = cmds[0].lower()
+        if len(cmds) > 1:
+            cmd1 = cmds[1].lower()
+        if cmd0 == 'r' or cmd0 == 'run' or (cmd0 == 'process' and cmd1 == 'launch'):
+            if cmd0[0] == 'r' or cmd0 == 'run':
+                args = cmds[1:]
+            else:
+                args = cmds[2:]
+            self.do_run(args, True)
+            return
+        msg = self.debugger.execute(cmds)
         self.ui.commander.append(msg)
 
     def do_run(self, args=None, from_cmd=False):
@@ -360,7 +374,7 @@ class MyListeningThread(QThread):
                             file_spec = line_entry.GetFileSpec()
                             filename = file_spec.fullpath
                             line_no = line_entry.GetLine()
-                            logging.debug('stopped @ %s:%d', filename, line_no)
+                            logging.debug('stopped for BP %d: %s:%d', bp_id, filename, line_no)
                             if filename is not None:
                                 self.FocusLine.emit(filename, int(line_no))
                             else:
