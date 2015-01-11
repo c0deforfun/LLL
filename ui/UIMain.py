@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/UIMain.ui'
 #
-# Created: Thu Jan  1 21:29:46 2015
+# Created: Sat Jan 10 22:21:28 2015
 #      by: PyQt4 UI code generator 4.11.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -68,7 +68,7 @@ class Ui_MainWindow(object):
         self.menuView = QtGui.QMenu(self.menuBar)
         self.menuView.setObjectName(_fromUtf8("menuView"))
         MainWindow.setMenuBar(self.menuBar)
-        self.statusBar = QtGui.QStatusBar(MainWindow)
+        self.statusBar = StatusBar(MainWindow)
         self.statusBar.setObjectName(_fromUtf8("statusBar"))
         MainWindow.setStatusBar(self.statusBar)
         self.toolBar = QtGui.QToolBar(MainWindow)
@@ -225,4 +225,5 @@ class Ui_MainWindow(object):
         self.action_Frames_2.setText(_translate("MainWindow", "frames", None))
 
 from ui.codeEditor.commandwindow import CommandWindow
+from ui.UIStatusBar import StatusBar
 import resources_rc

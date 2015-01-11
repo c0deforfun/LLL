@@ -106,7 +106,7 @@
    <addaction name="menuView"/>
    <addaction name="menu_Help"/>
   </widget>
-  <widget class="QStatusBar" name="statusBar"/>
+  <widget class="StatusBar" name="statusBar"/>
   <widget class="QToolBar" name="toolBar">
    <property name="enabled">
     <bool>true</bool>
@@ -349,6 +349,11 @@
    <class>CommandWindow</class>
    <extends>QPlainTextEdit</extends>
    <header>ui.codeEditor.commandwindow.h</header>
+  </customwidget>
+  <customwidget>
+   <class>StatusBar</class>
+   <extends>QStatusBar</extends>
+   <header>ui.UIStatusBar.h</header>
   </customwidget>
  </customwidgets>
  <resources>

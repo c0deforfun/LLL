@@ -1,7 +1,8 @@
 #!/bin/python2
 """Main controller of LLL
 """
-import sys, os, inspect, re, ConfigParser, logging
+import sys, os, inspect, ConfigParser
+import logging
 from PyQt4.QtCore import QThread, pyqtSignal
 from PyQt4 import QtGui, QtCore, Qt
 from PyQt4.QtGui import QMessageBox, QAction
@@ -52,7 +53,6 @@ class MainWindow(QtGui.QMainWindow):
         self.my_listener.StateChanged.connect(self.on_state_changed)
         self.debugger.listener = self.my_listener
         self.my_listener.start()
-
         self.opened_files = {}
 
         args = Qt.qApp.arguments()
@@ -61,6 +61,8 @@ class MainWindow(QtGui.QMainWindow):
             self.do_exe_file_open(args[1])
         if len(args) > 2:
             self.cfg_window.arglist = [str(x) for x in args[2:]]
+
+        logging.info('Ready')
 
     def init_ui(self):
         """initialize UI"""
@@ -101,6 +103,10 @@ class MainWindow(QtGui.QMainWindow):
 
     def closeEvent(self, event):
         """when close event is triggered"""
+        if not (self.debugger.curr_process and
+                self.debugger.curr_process.is_alive):
+            event.accept()
+            return
         reply = QtGui.QMessageBox.question(self, 'Message', 'Quit?', \
                                            QMessageBox.Yes, QMessageBox.No)
         if reply == QtGui.QMessageBox.Yes:
@@ -207,8 +213,23 @@ class MainWindow(QtGui.QMainWindow):
         #.ui.frame_viewer.resizeColumnToContents(2)
         self.ui.frame_viewer.expandToDepth(1)
 
+    @staticmethod
+    def get_state_name(state):
+        names = {lldb.eStateCrashed : 'Crashed',
+                 lldb.eStateExited : 'Exited',
+                 lldb.eStateLaunching : 'Launching',
+                 lldb.eStateRunning : 'Running',
+                 lldb.eStateStepping : 'Stepping',
+                 lldb.eStateStopped : 'Stopped',
+                 lldb.eStateSuspended : 'Suspended'}
+        if state in names:
+            return names[state]
+        else:
+            return 'Unknown'
+
     def on_state_changed(self, state):
         """slot for state change event"""
+        self.ui.statusBar.update_state(self.get_state_name(state))
         process = self.debugger.curr_process
         steppable = process is not None and process.is_alive and state != lldb.eStateRunning
         if process is not None:
