@@ -92,17 +92,14 @@ class Debugger(object):
             bp_lines.append(line_no)
         return bp_lines
 
-    def execute(self, cmds):
+    def execute(self, cmd, cmd_line):
         """do the 'execute' command """
-        cmd0 = ''
-        cmd1 = ''
-        if len(cmds) > 0:
-            cmd0 = cmds[0].lower()
-            if not self._cmd_interp.CommandExists(cmd0) and not self._cmd_interp.AliasExists(cmd0):
-                return 'Invalid cmd ' + cmd0
+        if cmd:
+            if not self._cmd_interp.CommandExists(cmd) and not self._cmd_interp.AliasExists(cmd):
+                return 'Invalid cmd ' + cmd
 
         res = SBCommandReturnObject() #TODO:global?
-        self._cmd_interp.HandleCommand(cmd, res, True)
+        self._cmd_interp.HandleCommand(cmd_line, res, True)
         return res.GetOutput()
 
     def run(self, args=None, from_cmd=False, default_args=None):

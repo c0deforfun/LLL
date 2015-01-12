@@ -227,10 +227,9 @@ class MainWindow(QtGui.QMainWindow):
         """ on command entered"""
         cmd = str(cmd)
         cmds = cmd.split()
-        cmd0 = ''
+        cmd0 = cmds[0].lower()
         cmd1 = ''
-        if len(cmds) > 0:
-            cmd0 = cmds[0].lower()
+
         if len(cmds) > 1:
             cmd1 = cmds[1].lower()
         if cmd0 == 'r' or cmd0 == 'run' or (cmd0 == 'process' and cmd1 == 'launch'):
@@ -240,7 +239,7 @@ class MainWindow(QtGui.QMainWindow):
                 args = cmds[2:]
             self.do_run(args, True)
             return
-        msg = self.debugger.execute(cmds)
+        msg = self.debugger.execute(cmd0, cmd)
         self.ui.commander.append(msg)
 
     def do_run(self, args=None, from_cmd=False):
