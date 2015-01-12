@@ -92,9 +92,8 @@ class Debugger(object):
             bp_lines.append(line_no)
         return bp_lines
 
-    def execute(self, cmd):
+    def execute(self, cmds):
         """do the 'execute' command """
-        cmds = cmd.split()
         cmd0 = ''
         cmd1 = ''
         if len(cmds) > 0:
