@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/UIMain.ui'
 #
-# Created: Sat Jan 10 22:21:28 2015
+# Created: Sun Jan 11 15:55:27 2015
 #      by: PyQt4 UI code generator 4.11.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -89,7 +89,7 @@ class Ui_MainWindow(object):
         self.frame_dock.setObjectName(_fromUtf8("frame_dock"))
         self.dockWidgetContents = QtGui.QWidget()
         self.dockWidgetContents.setObjectName(_fromUtf8("dockWidgetContents"))
-        self.frame_viewer = QtGui.QTreeView(self.dockWidgetContents)
+        self.frame_viewer = FrameInfoViewer(self.dockWidgetContents)
         self.frame_viewer.setGeometry(QtCore.QRect(50, 50, 256, 192))
         self.frame_viewer.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         self.frame_viewer.setAutoScroll(True)
@@ -225,5 +225,6 @@ class Ui_MainWindow(object):
         self.action_Frames_2.setText(_translate("MainWindow", "frames", None))
 
 from ui.codeEditor.commandwindow import CommandWindow
+from ui.UIFrameInfoViewer import FrameInfoViewer
 from ui.UIStatusBar import StatusBar
 import resources_rc

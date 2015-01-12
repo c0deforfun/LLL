@@ -38,6 +38,7 @@ from ui.About import AboutDialog
 
 class MainWindow(QtGui.QMainWindow):
     """ Main window of the debugger"""
+    FocusLine = pyqtSignal(str, int, name='FocusLine')
     def __init__(self):
         QtGui.QMainWindow.__init__(self)
         self.init_ui()
@@ -48,8 +49,8 @@ class MainWindow(QtGui.QMainWindow):
 
         self.debugger = Debugger(stdout_path, stdout_path, self.cfg_window.working_dir)
         self.last_highlighted_editor = None
-        self.my_listener = MyListeningThread(self.debugger.dbg)
-        self.my_listener.FocusLine.connect(self.do_focus_line)
+        self.my_listener = MyListeningThread(self.debugger.dbg, self.FocusLine)
+        self.FocusLine.connect(self.do_focus_line)
         self.my_listener.StateChanged.connect(self.on_state_changed)
         self.debugger.listener = self.my_listener
         self.my_listener.start()
@@ -84,9 +85,7 @@ class MainWindow(QtGui.QMainWindow):
         layout.addWidget(self.ui.frame_viewer)
         #layout.addWidget(scroll_area)
         self.ui.dockWidgetContents.setLayout(layout)
-        #self.ui.frame_viewer.headerHidden = True
-        #self.ui.frame_viewer.header().hide()
-        self.ui.frame_viewer.expandToDepth(1)
+        self.ui.frame_viewer.set_focus_signal(self.FocusLine)
 
         self.connect(self.ui.action_Open, QtCore.SIGNAL('triggered()'), self.do_exe_file_open)
         self.connect(self.ui.action_Run, QtCore.SIGNAL('triggered()'), self.do_run)
@@ -94,7 +93,6 @@ class MainWindow(QtGui.QMainWindow):
         self.connect(self.ui.action_StepInto, QtCore.SIGNAL('triggered()'), self.do_step_into)
         self.connect(self.ui.action_StepOut, QtCore.SIGNAL('triggered()'), self.do_step_out)
         self.connect(self.ui.action_Frames, QtCore.SIGNAL('triggered()'), self.do_frames)
-        self.connect(self.ui.frame_viewer, QtCore.SIGNAL('activated(const QModelIndex&)'), self.select_frame)
 
         self.ui.action_Exit.triggered.connect(Qt.qApp.quit)
         self.ui.commander.commandEntered.connect(self.do_command)
@@ -143,7 +141,7 @@ class MainWindow(QtGui.QMainWindow):
 
     def do_focus_line(self, filename, line_no):
         """ slot for focusing line event"""
-        if filename is None:
+        if not filename:
             editor = None
         else:
             filename = str(filename)
@@ -152,66 +150,15 @@ class MainWindow(QtGui.QMainWindow):
                 self.open_src_file(filename)
             editor = self.opened_files[filename]
 
-        if self.last_highlighted_editor != editor:
-            if self.last_highlighted_editor is not None:
-                self.last_highlighted_editor.setExtraSelections([])
+        if self.last_highlighted_editor and self.last_highlighted_editor != editor:
+            # clear highlight
+            self.last_highlighted_editor.setExtraSelections([])
 
         if editor is not None:
             editor.focus_line(line_no)
             self.ui.tabCodeEditor.setCurrentWidget(editor)
 
         self.last_highlighted_editor = editor
-
-    def select_frame(self, idx):
-        print("idx is %s") (str(idx))
-
-    def update_frame_info(self):
-        if not self.action_Frames.isChecked():
-            return
-        process = self.debugger.curr_process
-        if process is None or not process.is_alive:
-            return
-
-        frame_data = QtGui.QStandardItemModel()
-        frame_data.setColumnCount(2)
-        frame_data.setHorizontalHeaderLabels(['',''])
-        root = frame_data.invisibleRootItem()
-        #if process.num_of_threads == 1:
-        for thread in process:
-            thread_name = thread.GetName()
-            if not thread_name:
-                thread_name = '[No Thread]'
-            thread_row = QtGui.QStandardItem(thread_name)
-            thread_row.setEditable(False)
-            root.appendRow([thread_row, None])
-            for frame in reversed(thread.frames):
-                frame_idx = '#%d: ' % frame.idx
-                frame_info =''
-                if frame.name:
-                    frame_idx += frame.name
-                    args = ','.join(map(str, frame.args))
-                    frame_info += ' (%s)' % args
-
-                line = frame.line_entry
-                if line:
-                    file_info = ' at %s:%d' % (str(line.GetFileSpec()), line.GetLine())
-                    frame_info += file_info
-                else:
-                    frame_info += str(frame.module.GetFileSpec())
-                if frame.is_inlined:
-                    frame_info += ' (inlined)'
-                col_idx = QtGui.QStandardItem(frame_idx)
-                col_idx.setEditable(False)
-                col_info = QtGui.QStandardItem(frame_info)
-                col_info.setEditable(False)
-                thread_row.appendRow([col_idx, col_info])
-
-        self.ui.frame_viewer.setModel(frame_data)
-        self.ui.frame_viewer.resizeColumnToContents(1)
-        self.ui.frame_viewer.setAutoScroll(True)
-        #self.ui.frame_viewer.resizeColumnToContents(1)
-        #.ui.frame_viewer.resizeColumnToContents(2)
-        self.ui.frame_viewer.expandToDepth(1)
 
     @staticmethod
     def get_state_name(state):
@@ -231,7 +178,12 @@ class MainWindow(QtGui.QMainWindow):
         """slot for state change event"""
         self.ui.statusBar.update_state(self.get_state_name(state))
         process = self.debugger.curr_process
-        steppable = process is not None and process.is_alive and state != lldb.eStateRunning
+        steppable = process is not None and process.is_alive and state == lldb.eStateStopped
+        if steppable:
+            self.ui.frame_viewer.show_frame_info(process)
+        else:
+            self.ui.frame_viewer.clear()
+
         if process is not None:
             self.ui.action_StepOver.setEnabled(steppable)
             self.ui.action_StepInto.setEnabled(steppable)
@@ -245,10 +197,8 @@ class MainWindow(QtGui.QMainWindow):
             if process is not None:
                 logging.info('process exited: [%d]:%s', process.GetExitStatus(),
                              process.GetExitDescription())
+            self.ui.frame_viewer.clear()
             return
-        self.update_frame_info()
-        if state == lldb.eStateCrashed:
-            logging.info('crashed')
 
     def open_src_file(self, src_filename, line=0):
         """show the source file in editor"""
@@ -319,16 +269,17 @@ class MainWindow(QtGui.QMainWindow):
 
 class MyListeningThread(QThread):
     """Listening events"""
-    FocusLine = pyqtSignal(str, int, name='FocusLine')
+
     StateChanged = pyqtSignal(int, name='StateChanged')
 
-    def __init__(self, dbg):
+    def __init__(self, dbg, focus_signal):
         QThread.__init__(self)
         self.dbg = dbg
         self.sb_listener = dbg.GetListener()
         #self.stopped = False
         self.process_broadcaster = None
         self.target_broadcaster = None
+        self.focus_signal = focus_signal
 
     def add_target_broadcaster(self, broadcaster):
         """ add broadcaster for targget events"""
@@ -397,9 +348,9 @@ class MyListeningThread(QThread):
                             line_no = line_entry.GetLine()
                             logging.debug('stopped for BP %d: %s:%d', bp_id, filename, line_no)
                             if filename is not None:
-                                self.FocusLine.emit(filename, int(line_no))
+                                self.focus_signal.emit(filename, int(line_no))
                             else:
-                                self.FocusLine.emit(None, -1)
+                                self.focus_signal.emit('', -1)
                         elif reason == lldb.eStopReasonWatchpoint or \
                              reason == lldb.eStopReasonPlanComplete:
                             frame = thread.GetFrameAtIndex(0)
@@ -409,7 +360,7 @@ class MyListeningThread(QThread):
                             line_no = line_entry.GetLine()
                             logging.debug('stopped @ %s:%d', filename, line_no)
                             if filename is not None:
-                                self.FocusLine.emit(filename, int(line_no))
+                                self.focus_signal.emit(filename, int(line_no))
                             break
                         elif reason == lldb.eStopReasonThreadExiting:
                             logging.debug('thread exit')
