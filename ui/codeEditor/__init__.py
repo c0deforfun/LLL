@@ -35,9 +35,10 @@ class CodeEditor(QPlainTextEdit):
     def open_source_file(self, filename):
         """open and show source file"""
         self.source_file = filename
-        txt = open(self.source_file).read()
-        self.setPlainText(txt)
-        self.highlighter.highlight(filename)
+        with open(self.source_file, 'r') as f:
+            txt = f.read()
+            self.setPlainText(txt)
+            self.highlighter.highlight(filename)
 
     def _update_line_number_area_width(self):
         """ change line number area width based on total lines"""

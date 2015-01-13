@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/UIMain.ui'
 #
-# Created: Sun Jan 11 15:55:27 2015
+# Created: Mon Jan 12 19:58:59 2015
 #      by: PyQt4 UI code generator 4.11.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -42,6 +42,8 @@ class Ui_MainWindow(object):
         self.verticalLayout = QtGui.QVBoxLayout(self.centralWidget)
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
         self.tabCodeEditor = QtGui.QTabWidget(self.centralWidget)
+        self.tabCodeEditor.setTabsClosable(True)
+        self.tabCodeEditor.setMovable(True)
         self.tabCodeEditor.setObjectName(_fromUtf8("tabCodeEditor"))
         self.verticalLayout.addWidget(self.tabCodeEditor)
         self.commander = CommandWindow(self.centralWidget)
@@ -224,7 +226,7 @@ class Ui_MainWindow(object):
         self.action_Frames.setText(_translate("MainWindow", "Frames", None))
         self.action_Frames_2.setText(_translate("MainWindow", "frames", None))
 
-from ui.codeEditor.commandwindow import CommandWindow
 from ui.UIFrameInfoViewer import FrameInfoViewer
+from ui.codeEditor.commandwindow import CommandWindow
 from ui.UIStatusBar import StatusBar
 import resources_rc

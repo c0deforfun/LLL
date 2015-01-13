@@ -94,13 +94,15 @@ class MainWindow(QtGui.QMainWindow):
         self.connect(self.ui.action_StepOut, QtCore.SIGNAL('triggered()'), self.do_step_out)
         self.connect(self.ui.action_Frames, QtCore.SIGNAL('triggered()'), self.do_frames)
 
+        self.connect(self.ui.tabCodeEditor, QtCore.SIGNAL('tabCloseRequested(int)'), self.close_tab)
+
         self.ui.action_Exit.triggered.connect(Qt.qApp.quit)
         self.ui.commander.commandEntered.connect(self.do_command)
         self.connect(self.ui.action_Run_Config, QtCore.SIGNAL('triggered()'), self.do_config)
         self.connect(self.ui.action_About, QtCore.SIGNAL('triggered()'), self.show_about)
 
     def closeEvent(self, event):
-        """when close event is triggered"""
+        """overrided. when close event is triggered"""
         if not (self.debugger.curr_process and
                 self.debugger.curr_process.is_alive):
             event.accept()
@@ -112,6 +114,14 @@ class MainWindow(QtGui.QMainWindow):
             event.accept()
         else:
             event.ignore()
+
+    def close_tab(self, idx):
+        editor = self.ui.tabCodeEditor.widget(idx)
+        #self.opened_files.remove()
+        #editor.close
+        self.close_src_file(editor.source_file)
+        self.ui.tabCodeEditor.removeTab(idx)
+        print('closing tab %d:%s') %(idx, editor.source_file)
 
     def show_about(self):
         """ show "About" window"""
@@ -199,6 +209,11 @@ class MainWindow(QtGui.QMainWindow):
                              process.GetExitDescription())
             self.ui.frame_viewer.clear()
             return
+
+    def close_src_file(self, name):
+        editor = self.opened_files[name]
+        editor.setParent(None)
+        del self.opened_files[name]
 
     def open_src_file(self, src_filename, line=0):
         """show the source file in editor"""
