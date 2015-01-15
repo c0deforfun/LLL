@@ -88,6 +88,7 @@ class CommandWindow(QPlainTextEdit):
 
             self.commandEntered.emit(cmd)
             self.add_cmd_to_history(cmd)
+            self.history_idx = len(self.history)
             return
         QPlainTextEdit.keyPressEvent(self, event)
 

@@ -34,6 +34,15 @@ class Debugger(object):
         """ set the args for running the target"""
         self._last_args = args
 
+    @staticmethod
+    def get_filename_and_lineNo(addr):
+        if not addr.IsValid():
+            return None, 0
+        line_entry = addr.GetLineEntry()
+        if not line_entry.IsValid():
+            return None, 0
+        return line_entry.GetFileSpec(), line_entry.GetLine()
+
     def open_file(self, exe_file_name):
         """ open the executable and create SBTarget and also find the
             main function"""
@@ -54,13 +63,26 @@ class Debugger(object):
         if not main_func.IsValid():
             return None, 0
         main_addr = main_func.GetStartAddress()
-        if not main_addr.IsValid():
-            return None, 0
-        line_entry = main_addr.GetLineEntry()
-        if not line_entry.IsValid():
+        filename, lineno = self.get_filename_and_lineNo(main_addr)
+        if not filename:
             return None, 0
         self._my_listener.add_target_broadcaster(self.target.GetBroadcaster())
-        return line_entry.GetFileSpec(), line_entry.GetLine()
+        return filename, lineno
+
+    def getBPLocationFromDesc(self, bp):
+        # find the bp's line No. from desc as bp location may use different line No.
+        # but file name is from location because for command "b foo.c", the desc does
+        # not return full path.
+        loc = bp.GetLocationAtIndex(0)
+        filename, lineno = self.get_filename_and_lineNo(loc.GetAddress())
+        stream = SBStream()
+        bp.GetDescription(stream)
+        desc = stream.GetData()
+        matched = re.search('file = \'(.*)\', line = (.*),', desc)
+        if matched:
+            line_no = int(matched.group(2))
+            return filename.fullpath, line_no
+        return None, None
 
     def toggle_breakpoint(self, file_name, line_no):
         """ toggle a break point"""
@@ -69,16 +91,11 @@ class Debugger(object):
             return []
         bp_lines = []
         existing_bp = None
-        stream = SBStream()
-        #find the bp's line No. from desc as bp location may use different line No.
+        # TODO: don't visit all bps
         for bp in target.breakpoint_iter():
-            stream.Clear()
-            bp.GetDescription(stream)
-            desc = stream.GetData()
-            matched = re.search('file = \'(.*)\', line = (.*),', desc)
-            if matched:
-                bp_file_name = matched.group(1)
-                bp_line_no = int(matched.group(2))
+            bp_file_name, bp_line_no  = self.getBPLocationFromDesc(bp)
+            if not bp_file_name or not bp_line_no:
+                continue
             if file_name == bp_file_name and bp_line_no == line_no:
                 existing_bp = bp
             else:

@@ -52,9 +52,11 @@ class MainWindow(QtGui.QMainWindow):
         self.my_listener = MyListeningThread(self.debugger.dbg, self.FocusLine)
         self.FocusLine.connect(self.do_focus_line)
         self.my_listener.StateChanged.connect(self.on_state_changed)
+        self.my_listener.BPChanged.connect(self.on_bp_changed)
         self.debugger.listener = self.my_listener
         self.my_listener.start()
         self.opened_files = {}
+        self.bp_locations = {}
 
         args = Qt.qApp.arguments()
         self.cfg_window.working_dir = os.getcwd()
@@ -121,7 +123,6 @@ class MainWindow(QtGui.QMainWindow):
         #editor.close
         self.close_src_file(editor.source_file)
         self.ui.tabCodeEditor.removeTab(idx)
-        print('closing tab %d:%s') %(idx, editor.source_file)
 
     def show_about(self):
         """ show "About" window"""
@@ -210,6 +211,35 @@ class MainWindow(QtGui.QMainWindow):
             self.ui.frame_viewer.clear()
             return
 
+    def on_bp_changed(self, bp, bp_type):
+        # TODO: might be multiple locations for a BP
+        filename, line_no = self.debugger.getBPLocationFromDesc(bp)
+        if not filename or not line_no:
+            logging.warning('Cannot find location from BP')
+            return
+
+        if filename not in self.bp_locations:
+            self.bp_locations[filename] = []
+
+        if bp_type == lldb.eBreakpointEventTypeAdded:
+            self.bp_locations[filename].append(line_no)
+    
+        elif bp_type == lldb.eBreakpointEventTypeRemoved:
+            if line_no in self.bp_locations[filename]:
+                self.bp_locations[filename].remove(line_no)
+            else:
+                logging.warning('removing non-existed BP ' + filename + ':' + str(line_no))
+                # TODO: trigger a rescan of all BPs?
+                return
+        else:
+            logging.debug('Unhandled BP event:' + str(bp_type))
+            return
+
+        if filename in self.opened_files:
+            lna = self.opened_files[filename].line_number_area
+            lna.breakpoints = self.bp_locations[filename]
+            lna.repaint()
+
     def close_src_file(self, name):
         editor = self.opened_files[name]
         editor.setParent(None)
@@ -235,8 +265,9 @@ class MainWindow(QtGui.QMainWindow):
         """ control the bp toggling"""
         sender = self.sender()
         filename = sender.filename
-        sender.breakpoints = self.debugger.toggle_breakpoint(filename, line_no)
-        sender.repaint()
+        # it should trigger BPChanged signal.
+        self.debugger.toggle_breakpoint(filename, line_no)
+
 
     def do_command(self, cmd):
         """ on command entered"""
@@ -285,6 +316,7 @@ class MyListeningThread(QThread):
     """Listening events"""
 
     StateChanged = pyqtSignal(int, name='StateChanged')
+    BPChanged = pyqtSignal(SBBreakpoint, int, name='StateChanged')
 
     def __init__(self, dbg, focus_signal):
         QThread.__init__(self)
@@ -324,26 +356,24 @@ class MyListeningThread(QThread):
                 event.Clear()
                 continue
 
-            #Check for target events
+            # Check for target events
             target = self.dbg.GetSelectedTarget()
             state = None
             if not target.IsValid():
                 continue
-            #Handle BP events
+            # Handle BP events
             if SBBreakpoint.EventIsBreakpointEvent(event):
+                type = SBBreakpoint.GetBreakpointEventTypeFromEvent(event)
                 bp = SBBreakpoint.GetBreakpointFromEvent(event)
-                logging.debug('bp changed %s', str(bp))
-            #Handle Process events
+                self.BPChanged.emit(bp, type)
+                continue
+
+            state = None
+            # Handle Process state events
             if SBProcess.EventIsProcessEvent(event):
                 process = SBProcess.GetProcessFromEvent(event)
                 state = process.GetState()
-                if state == lldb.eStateLaunching:
-                    logging.debug('launching')
-                elif state == lldb.eStateRunning:
-                    logging.debug('running')
-                elif state == lldb.eStateStopped:
-                    logging.debug('process stopped')
-
+                if state == lldb.eStateStopped:
                     for thread in process:
                         reason = thread.GetStopReason()
                         if reason == lldb.eStopReasonBreakpoint:
@@ -384,12 +414,7 @@ class MyListeningThread(QThread):
 
                         elif reason == lldb.eStopReasonExec:
                             logging.debug('re-run')
-                elif state == lldb.eStateSuspended:
-                    logging.debug('suspended')
-                elif state == lldb.eStateStepping:
-                    logging.debug('stepping')
-                else:
-                    logging.debug('state is %s', state)
+
             if state is not None:
                 self.StateChanged.emit(state)
             event.GetDescription(ss)
