@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/UIMain.ui'
 #
-# Created: Mon Jan 12 19:58:59 2015
+# Created: Wed Jan 14 20:21:49 2015
 #      by: PyQt4 UI code generator 4.11.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -93,14 +93,16 @@ class Ui_MainWindow(object):
         self.dockWidgetContents.setObjectName(_fromUtf8("dockWidgetContents"))
         self.frame_viewer = FrameInfoViewer(self.dockWidgetContents)
         self.frame_viewer.setGeometry(QtCore.QRect(50, 50, 256, 192))
+        self.frame_viewer.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         self.frame_viewer.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         self.frame_viewer.setAutoScroll(True)
-        self.frame_viewer.setHorizontalScrollMode(QtGui.QAbstractItemView.ScrollPerPixel)
+        self.frame_viewer.setHorizontalScrollMode(QtGui.QAbstractItemView.ScrollPerItem)
         self.frame_viewer.setWordWrap(False)
         self.frame_viewer.setHeaderHidden(False)
         self.frame_viewer.setObjectName(_fromUtf8("frame_viewer"))
         self.frame_viewer.header().setVisible(True)
         self.frame_viewer.header().setCascadingSectionResizes(False)
+        self.frame_viewer.header().setStretchLastSection(False)
         self.frame_dock.setWidget(self.dockWidgetContents)
         MainWindow.addDockWidget(QtCore.Qt.DockWidgetArea(2), self.frame_dock)
         self.action_Open = QtGui.QAction(MainWindow)

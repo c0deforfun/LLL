@@ -84,8 +84,9 @@ class MainWindow(QtGui.QMainWindow):
         layout = QtGui.QVBoxLayout()
         #scroll_area = QtGui.QScrollArea()
         #scroll_area.setWidget(self.ui.frame_viewer)
-        layout.addWidget(self.ui.frame_viewer)
         #layout.addWidget(scroll_area)
+        layout.addWidget(self.ui.frame_viewer)
+
         self.ui.dockWidgetContents.setLayout(layout)
         self.ui.frame_viewer.set_focus_signal(self.FocusLine)
 
@@ -94,7 +95,6 @@ class MainWindow(QtGui.QMainWindow):
         self.connect(self.ui.action_StepOver, QtCore.SIGNAL('triggered()'), self.do_step_over)
         self.connect(self.ui.action_StepInto, QtCore.SIGNAL('triggered()'), self.do_step_into)
         self.connect(self.ui.action_StepOut, QtCore.SIGNAL('triggered()'), self.do_step_out)
-        self.connect(self.ui.action_Frames, QtCore.SIGNAL('triggered()'), self.do_frames)
 
         self.connect(self.ui.tabCodeEditor, QtCore.SIGNAL('tabCloseRequested(int)'), self.close_tab)
 
@@ -223,7 +223,7 @@ class MainWindow(QtGui.QMainWindow):
 
         if bp_type == lldb.eBreakpointEventTypeAdded:
             self.bp_locations[filename].append(line_no)
-    
+
         elif bp_type == lldb.eBreakpointEventTypeRemoved:
             if line_no in self.bp_locations[filename]:
                 self.bp_locations[filename].remove(line_no)
@@ -305,12 +305,6 @@ class MainWindow(QtGui.QMainWindow):
     def do_step_out(self):
         """ on step out of frame"""
         self.debugger.step_out()
-
-    def do_frames(self):
-        if self.ui.action_Frames.isChecked():
-            pass
-        else:
-            pass
 
 class MyListeningThread(QThread):
     """Listening events"""

@@ -169,6 +169,9 @@
        <height>192</height>
       </rect>
      </property>
+     <property name="verticalScrollBarPolicy">
+      <enum>Qt::ScrollBarAsNeeded</enum>
+     </property>
      <property name="horizontalScrollBarPolicy">
       <enum>Qt::ScrollBarAsNeeded</enum>
      </property>
@@ -176,7 +179,7 @@
       <bool>true</bool>
      </property>
      <property name="horizontalScrollMode">
-      <enum>QAbstractItemView::ScrollPerPixel</enum>
+      <enum>QAbstractItemView::ScrollPerItem</enum>
      </property>
      <property name="wordWrap">
       <bool>false</bool>
@@ -188,6 +191,9 @@
       <bool>true</bool>
      </attribute>
      <attribute name="headerCascadingSectionResizes">
+      <bool>false</bool>
+     </attribute>
+     <attribute name="headerStretchLastSection">
       <bool>false</bool>
      </attribute>
     </widget>

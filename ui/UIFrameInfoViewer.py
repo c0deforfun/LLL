@@ -1,5 +1,5 @@
 """ for showing message on status bar"""
-from PyQt4.QtGui import QTreeView, QStandardItem, QStandardItemModel
+from PyQt4.QtGui import QTreeView, QStandardItem, QStandardItemModel, QHeaderView
 
 import logging, logging.handlers
 
@@ -11,6 +11,7 @@ class FrameInfoViewer(QTreeView):
         self.setAutoScroll(True)
         self.source_files = {}
         self.focus_signal = None
+        self.header().setResizeMode(QHeaderView.ResizeToContents)
 
     def set_focus_signal(self, signal):
         self.focus_signal = signal
@@ -25,6 +26,7 @@ class FrameInfoViewer(QTreeView):
     def clear(self):
         frame_data = self.get_empty_model()
         self.setModel(frame_data)
+        self.setAlternatingRowColors(True)
         self.resizeColumnToContents(1)
         self.expandToDepth(1)
 
@@ -82,7 +84,6 @@ class FrameInfoViewer(QTreeView):
                 thread_row.appendRow([col_idx, col_info])
 
         self.setModel(frame_data)
-        self.resizeColumnToContents(1)
         self.expandToDepth(1)
 
     def mousePressEvent(self, event):
