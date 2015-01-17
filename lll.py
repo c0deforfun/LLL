@@ -35,6 +35,7 @@ from ui.UIMain import Ui_MainWindow
 from ui.codeEditor import CodeEditor
 from ui.UIRunConfigWindow import RunConfigWindow
 from ui.About import AboutDialog
+from ui.UIFrameInfoWidget import Ui_FrameInfoWidget
 
 class MainWindow(QtGui.QMainWindow):
     """ Main window of the debugger"""
@@ -81,13 +82,6 @@ class MainWindow(QtGui.QMainWindow):
         icon1.addPixmap(QtGui.QPixmap((":/icons/icons/frame.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.action_Frames.setIcon(icon1)
 
-        layout = QtGui.QVBoxLayout()
-        #scroll_area = QtGui.QScrollArea()
-        #scroll_area.setWidget(self.ui.frame_viewer)
-        #layout.addWidget(scroll_area)
-        layout.addWidget(self.ui.frame_viewer)
-
-        self.ui.dockWidgetContents.setLayout(layout)
         self.ui.frame_viewer.set_focus_signal(self.FocusLine)
 
         self.connect(self.ui.action_Open, QtCore.SIGNAL('triggered()'), self.do_exe_file_open)
@@ -95,6 +89,9 @@ class MainWindow(QtGui.QMainWindow):
         self.connect(self.ui.action_StepOver, QtCore.SIGNAL('triggered()'), self.do_step_over)
         self.connect(self.ui.action_StepInto, QtCore.SIGNAL('triggered()'), self.do_step_into)
         self.connect(self.ui.action_StepOut, QtCore.SIGNAL('triggered()'), self.do_step_out)
+        self.connect(self.ui.btn_frame_up, QtCore.SIGNAL('clicked()'), self.ui.frame_viewer.up)
+        self.connect(self.ui.btn_frame_down, QtCore.SIGNAL('clicked()'), self.ui.frame_viewer.down)
+        self.ui.frame_viewer.set_show_args(self.ui.chk_show_args)
 
         self.connect(self.ui.tabCodeEditor, QtCore.SIGNAL('tabCloseRequested(int)'), self.close_tab)
 

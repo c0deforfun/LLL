@@ -12,6 +12,7 @@ class FrameInfoViewer(QTreeView):
         self.source_files = {}
         self.focus_signal = None
         self.header().setResizeMode(QHeaderView.ResizeToContents)
+        self._show_args = None
 
     def set_focus_signal(self, signal):
         self.focus_signal = signal
@@ -60,9 +61,9 @@ class FrameInfoViewer(QTreeView):
                 selectable = False
                 if frame.name:
                     frame_idx += frame.name
-                    args = ','.join(map(str, frame.args))
-                    frame_info += ' (%s)' % args
-
+                    if self._show_args.isChecked():
+                        args = ','.join(map(str, frame.args))
+                        frame_info += ' (%s)' % args
                 line = frame.line_entry
                 if line:
                     file_info = ' at %s:%d' % (str(line.GetFileSpec()), line.GetLine())
@@ -85,6 +86,15 @@ class FrameInfoViewer(QTreeView):
 
         self.setModel(frame_data)
         self.expandToDepth(1)
+
+    def up(self):
+        pass
+
+    def down(self):
+        pass
+
+    def set_show_args(self, widget):
+        self._show_args = widget
 
     def mousePressEvent(self, event):
         idx = self.indexAt(event.pos());
