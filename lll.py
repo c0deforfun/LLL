@@ -148,7 +148,7 @@ class MainWindow(QtGui.QMainWindow):
             self.open_src_file(main_file.fullpath, line)
             self.ui.action_Run.setEnabled(True)
             self.my_listener.add_target_broadcaster(self.debugger.target.GetBroadcaster())
-            self.ui.source_tree.set_root(main_file.GetDirectory())
+            self.ui.source_tree.set_root(main_file.GetDirectory(), False)
         elif line == 0:
             logging.info('cannot find entry function')
         else:
@@ -264,6 +264,7 @@ class MainWindow(QtGui.QMainWindow):
         editor.line_number_area.BPToggled.connect(self.toggle_breakpoint)
         if line > 0:
             self.do_focus_line(src_filename, line)
+        self.ui.source_tree.set_root(os.path.dirname(src_filename))
 
     def toggle_breakpoint(self, line_no):
         """ control the bp toggling"""

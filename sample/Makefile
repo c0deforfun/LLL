@@ -1,4 +1,4 @@
-test: test.c main.c bar.c
+test: test.c main/main.c bar/bar.c
 	gcc -g -O0 -o $@ $^
 
 clean:

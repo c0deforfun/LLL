@@ -2,7 +2,7 @@
 from PyQt4 import QtCore
 from PyQt4.QtGui import QWidget, QFileSystemModel, QHeaderView
 from PyQt4.QtCore import QDir
-import logging
+import logging, os
 
 from ui.UISourceFileTreeWidget import Ui_SourceFileTreeWidget
 
@@ -36,16 +36,24 @@ class SourceFileTreeWidget(QWidget):
     def set_open_file_signal(self, signal):
         self.open_file_signal = signal
 
-    def set_root(self, root = None):
+    def set_root(self, root = None, use_common_prefix = True):
+        curr = str(self.ui.custom_root.text())
         if not root:
+            use_common_prefix = False # input text box will override it.
             root = self.ui.custom_root.text()
         else:
             self.ui.custom_root.setText(root)
+        idx = self.file_model.index(root)
+        self.ui.tree.setExpanded(idx, True)
+        if use_common_prefix and curr == os.path.commonprefix([root, curr]):
+            return
+
         idx = self.file_model.setRootPath(root)
         if not idx.isValid():
             logging.warn('Invalid path')
             return
         self.ui.tree.setRootIndex(idx)
+        self.ui.tree.setExpanded(idx, True)
     
     def set_filter(self):
         filters = str(self.ui.custom_filter.text()).split(';')
