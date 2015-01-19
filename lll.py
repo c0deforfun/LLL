@@ -5,7 +5,7 @@ import sys, os
 import logging
 from PyQt4.QtCore import QThread, QSettings, pyqtSignal
 from PyQt4 import QtGui, QtCore, Qt
-from PyQt4.QtGui import QMessageBox, QAction, QIcon
+from PyQt4.QtGui import QMessageBox, QAction, QIcon, QMenu
 from ptyview import PtyView
 import clang.cindex
 
@@ -102,11 +102,26 @@ class MainWindow(QtGui.QMainWindow):
         self.ui.frame_viewer.set_show_args(self.ui.chk_show_args)
 
         self.connect(self.ui.tabCodeEditor, QtCore.SIGNAL('tabCloseRequested(int)'), self.close_tab)
+        self.connect(self.ui.tabCodeEditor, QtCore.SIGNAL('currentChanged(int)'), self.ui.source_tree.set_file_selected)
+        self.connect(self.ui.tabCodeEditor, QtCore.SIGNAL('customContextMenuRequested(QPoint)'), self.show_tab_context_menu)
 
         self.ui.action_Exit.triggered.connect(Qt.qApp.quit)
         self.ui.commander.commandEntered.connect(self.do_command)
         self.connect(self.ui.action_Run_Config, QtCore.SIGNAL('triggered()'), self.do_config)
         self.connect(self.ui.action_About, QtCore.SIGNAL('triggered()'), self.show_about)
+
+    def show_tab_context_menu(self, point):
+        if point.isNull():
+            return
+        bar = self.ui.tabCodeEditor.tabBar()
+        idx = bar.tabAt(point)
+        if idx < 0:
+            return
+        editor = self.ui.tabCodeEditor.widget(idx)
+        menu = QMenu(bar)
+        save_action = menu.addAction(QIcon(":/icons/icons/save.png"), 'Save', editor.save)
+        save_action.setEnabled(editor.document().isModified())
+        menu.exec_(bar.mapToGlobal(point))
 
     def closeEvent(self, event):
         """overrided. when close event is triggered"""
@@ -122,8 +137,19 @@ class MainWindow(QtGui.QMainWindow):
         else:
             event.ignore()
 
+    def showTabContextMenu(self, point):
+        print('context:%s') %str(point)
+
     def close_tab(self, idx):
         editor = self.ui.tabCodeEditor.widget(idx)
+        if editor.document().isModified():
+            reply = QtGui.QMessageBox.question(self, 'Message', editor.source_file + ' has been modified', \
+                                           QMessageBox.Save, QMessageBox.Discard, QMessageBox.Cancel)
+            if reply == QtGui.QMessageBox.Cancel:
+                return
+            if reply == QMessageBox.Save:
+                editor.save()
+
         #self.opened_files.remove()
         #editor.close
         self.close_src_file(editor.source_file)
@@ -254,13 +280,14 @@ class MainWindow(QtGui.QMainWindow):
     def open_src_file(self, src_filename, line=0):
         """show the source file in editor"""
         if not os.path.isfile(src_filename) or not os.access(src_filename, os.R_OK):
-            #TODO: show error message
+            logging.warn('Unable to access ' + src_filename)
             return
         if src_filename in self.opened_files:
             return
 
-        editor = CodeEditor()
-        self.ui.tabCodeEditor.addTab(editor, os.path.basename(src_filename))
+        editor = CodeEditor(self.ui.tabCodeEditor)
+        idx = self.ui.tabCodeEditor.addTab(editor, os.path.basename(src_filename))
+        self.ui.tabCodeEditor.setTabToolTip(idx, src_filename)
         editor.open_source_file(src_filename)
         self.opened_files[str(src_filename)] = editor
         editor.line_number_area.BPToggled.connect(self.toggle_breakpoint)

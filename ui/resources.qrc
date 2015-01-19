@@ -1,5 +1,7 @@
 <RCC>
   <qresource prefix="icons">
+    <file>icons/save.png</file>
+    <file>icons/locked.png</file>
     <file>icons/directory.png</file>
     <file>icons/up.png</file>
     <file>icons/down.png</file>

@@ -1,6 +1,6 @@
 """ for showing source file tree"""
 from PyQt4 import QtCore
-from PyQt4.QtGui import QWidget, QFileSystemModel, QHeaderView
+from PyQt4.QtGui import QWidget, QFileSystemModel, QHeaderView, QItemSelectionModel
 from PyQt4.QtCore import QDir
 import logging, os
 
@@ -66,4 +66,10 @@ class SourceFileTreeWidget(QWidget):
         fullpath = self.file_model.filePath(idx)
         if self.open_file_signal:
             self.open_file_signal.emit(str(fullpath), 0)
+
+    def set_file_selected(self, tabIdx):
+        filename = self.sender().tabToolTip(tabIdx)
+        idx = self.file_model.index(filename)
+        if idx.isValid():
+            self.ui.tree.selectionModel().select(idx, QItemSelectionModel.ClearAndSelect)
 
