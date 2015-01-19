@@ -5,7 +5,7 @@ import sys, os, inspect, ConfigParser
 import logging
 from PyQt4.QtCore import QThread, pyqtSignal
 from PyQt4 import QtGui, QtCore, Qt
-from PyQt4.QtGui import QMessageBox, QAction
+from PyQt4.QtGui import QMessageBox, QAction, QIcon
 from ptyview import PtyView
 import clang.cindex
 
@@ -80,18 +80,14 @@ class MainWindow(QtGui.QMainWindow):
         self.action_Frames = self.ui.frame_dock.toggleViewAction()
         self.ui.menuView.addAction(self.action_Frames)
         self.action_Frames.setCheckable(True)
-        icon1 = QtGui.QIcon()
-        icon1.addPixmap(QtGui.QPixmap((":/icons/icons/frame.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.action_Frames.setIcon(icon1)
+        self.action_Frames.setIcon(QIcon(":/icons/icons/frame.png"))
         self.ui.frame_viewer.set_focus_signal(self.FocusLine)
 
         # setup source file tree dock
         self.action_SourceTree = self.ui.file_tree_dock.toggleViewAction()
         self.ui.menuView.addAction(self.action_SourceTree)
         self.action_SourceTree.setCheckable(True)
-        icon1 = QtGui.QIcon()
-        icon1.addPixmap(QtGui.QPixmap((":/icons/icons/directory.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.action_SourceTree.setIcon(icon1)
+        self.action_SourceTree.setIcon(QIcon(":/icons/icons/directory.png"))
         self.ui.source_tree.set_open_file_signal(self.FocusLine)
 
         self.connect(self.ui.action_Open, QtCore.SIGNAL('triggered()'), self.do_exe_file_open)
