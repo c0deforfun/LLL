@@ -1,6 +1,7 @@
 """ using clang to highlight keywords """
 from PyQt4.QtGui import  QColor, QBrush, QTextCursor, QTextCharFormat
 from clang.cindex import TranslationUnit, TokenKind
+import logging
 
 """
 SOLARIZED HEX     16/8 TERMCOL  XTERM/HEX   L*A*B      RGB         HSB
@@ -54,7 +55,11 @@ class Highlighter(object):
 
     def highlight(self, filename):
         """ highlight the source file  """
-        cursor = TranslationUnit.from_source(filename).cursor
+        try:
+            cursor = TranslationUnit.from_source(filename).cursor
+        except:
+            logging.warn('Unable to parse ' + filename)
+            return
         children = cursor.get_children()
         for child in children:
             loc = child.location
