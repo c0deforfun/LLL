@@ -38,7 +38,6 @@ from ui.UIMain import Ui_MainWindow
 from ui.codeEditor import CodeEditor
 from ui.UIRunConfigWindow import RunConfigWindow
 from ui.About import AboutDialog
-from ui.UIFrameInfoWidget import Ui_FrameInfoWidget
 
 class MainWindow(QtGui.QMainWindow):
     """ Main window of the debugger"""
