@@ -234,6 +234,21 @@
     </layout>
    </widget>
   </widget>
+  <widget class="QDockWidget" name="file_tree_dock">
+   <property name="windowTitle">
+    <string>Source Files</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>1</number>
+   </attribute>
+   <widget class="QWidget" name="dockWidgetContents_2">
+    <layout class="QVBoxLayout" name="verticalLayout_4">
+     <item>
+      <widget class="SourceFileTreeWidget" name="source_tree" native="true"/>
+     </item>
+    </layout>
+   </widget>
+  </widget>
   <action name="action_Open">
    <property name="icon">
     <iconset>
@@ -406,6 +421,12 @@
    <class>FrameInfoViewer</class>
    <extends>QTreeView</extends>
    <header>ui.UIFrameInfoViewer.h</header>
+  </customwidget>
+  <customwidget>
+   <class>SourceFileTreeWidget</class>
+   <extends>QWidget</extends>
+   <header>ui.SourceFileTreeWidget.h</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources>

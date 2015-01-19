@@ -1,5 +1,6 @@
 <RCC>
   <qresource prefix="icons">
+    <file>icons/directory.png</file>
     <file>icons/up.png</file>
     <file>icons/down.png</file>
     <file>icons/step_out.png</file>

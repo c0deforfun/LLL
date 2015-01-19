@@ -1,12 +1,17 @@
 PY_INSTALLER=../PyInstaller-2.1/pyinstaller.py
 
-gen := ui/UIMain.py ui/UIRunConfig.py ui/UIAbout.py ui/resources_rc.py
+gen := ui/UIMain.py ui/UIRunConfig.py ui/UIAbout.py ui/resources_rc.py ui/UISourceFileTreeWidget.py
 
 all: $(gen)
 test: test.c
 	gcc -o $@ -g -Og $<
+
 %.py: %.ui
 	pyuic4 $< -o $@
+
+UI%.py: %.ui
+	pyuic4 $< -o $@
+
 
 %_rc.py: %.qrc
 	pyrcc4 $< -o $@
