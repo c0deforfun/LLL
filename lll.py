@@ -1,9 +1,9 @@
 #!/bin/python2
 """Main controller of LLL
 """
-import sys, os, inspect, ConfigParser
+import sys, os
 import logging
-from PyQt4.QtCore import QThread, pyqtSignal
+from PyQt4.QtCore import QThread, QSettings, pyqtSignal
 from PyQt4 import QtGui, QtCore, Qt
 from PyQt4.QtGui import QMessageBox, QAction, QIcon
 from ptyview import PtyView
@@ -11,19 +11,22 @@ import clang.cindex
 
 def initialize():
     """ read config file and initialize sys path etc."""
-    config = ConfigParser.RawConfigParser()
-    curr_path = os.path.split(inspect.getfile(inspect.currentframe()))[0]
-    cmd_folder = os.path.realpath(os.path.abspath(curr_path))
+    settings = QSettings('c0deforfun', 'lll')
+    config_file = settings.fileName()
+    settings.beginGroup('common')
+    if not os.path.exists(config_file):
+        settings.setValue('clang_lib_path', 'llvm-install-prefix/lib')
+        settings.setValue('lldb_path', 'llvm-install-prefix/lib/python2.7/site-packages')
+        settings.setValue('logging_level', 'INFO')
+        logging.fatal('Please config ' + config_file)
+        
+    clang_lib_path = str(settings.value('clang_lib_path', '').toString())
+    lldb_path = str(settings.value('lldb_path', clang_lib_path + '/lib/python2.7/site-packages').toString())
+    logging_level = str(settings.value('logging_level', 'logging.INFO').toString())
+    settings.endGroup()
 
-    #search config file in: program's dir/lll.ini, ~/.lll.ini
-    config.read([cmd_folder + '/lll.ini', os.path.expanduser('~/.lll.ini')])
-    logging_level = logging.INFO
-    if config.has_section('common'):
-        clang_lib_path = config.get('common', 'clang_lib_path')
-        lldb_path = config.get('common', 'lldb_path')
-        logging_level = config.get('common', 'logging_level')
-        sys.path.append(lldb_path)
-        clang.cindex.Config.set_library_path(clang_lib_path)
+    sys.path.append(lldb_path)
+    clang.cindex.Config.set_library_path(clang_lib_path)
     logging.basicConfig(level=logging_level)
 
 initialize()
