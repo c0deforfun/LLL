@@ -3,11 +3,21 @@
 """
 import sys, os
 import logging
-from PyQt4.QtCore import QThread, QSettings, pyqtSignal
-from PyQt4 import QtGui, QtCore, Qt
-from PyQt4.QtGui import QMessageBox, QAction, QIcon, QMenu
-from ptyview import PtyView
-import clang.cindex
+
+try:
+    from ptyview import PtyView
+    from PyQt4.QtCore import QThread, QSettings, pyqtSignal
+    from PyQt4 import QtGui, QtCore, Qt
+    from PyQt4.QtGui import QMessageBox, QAction, QIcon, QMenu
+except ImportError:
+    print('Unable to import PyQt4')
+    sys.exit(1)
+
+try:
+    import clang.cindex
+except ImportError:
+    print('Unable to import python bindings of clang')
+    sys.exit(1)
 
 def initialize():
     """ read config file and initialize sys path etc."""
@@ -30,14 +40,19 @@ def initialize():
     logging.basicConfig(level=logging_level)
 
 initialize()
-import lldb
-from lldb import SBTarget, SBProcess, SBEvent, \
-                 SBStream, SBBreakpoint
-from debugger import Debugger
-from ui.UIMain import Ui_MainWindow
-from ui.codeEditor import CodeEditor
-from ui.UIRunConfigWindow import RunConfigWindow
-from ui.About import AboutDialog
+
+try:
+    import lldb
+    from lldb import SBTarget, SBProcess, SBEvent, \
+                     SBStream, SBBreakpoint
+    from debugger import Debugger
+    from ui.UIMain import Ui_MainWindow
+    from ui.codeEditor import CodeEditor
+    from ui.UIRunConfigWindow import RunConfigWindow
+    from ui.About import AboutDialog
+except ImportError:
+    print('Unable to import LLDB python modules')
+    sys.exit(1)
 
 class MainWindow(QtGui.QMainWindow):
     """ Main window of the debugger"""

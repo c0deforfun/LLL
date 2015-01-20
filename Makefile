@@ -20,7 +20,7 @@ UI%.py: %.ui
 
 dist: lll.py
 	rm -fr dist
-	$(PY_INSTALLER) --hidden-import=uuid --hidden-import=code --hidden-import=codeop $<
+	python2 $(PY_INSTALLER) --hidden-import=uuid --hidden-import=code --hidden-import=codeop -F $<
 
 clean:
 	find . -name '*.pyc' -exec rm -f '{}' \;
