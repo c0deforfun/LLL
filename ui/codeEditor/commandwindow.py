@@ -13,6 +13,10 @@ class CommandWindow(QPlainTextEdit):
         self.cursorPositionChanged.connect(self.cursorChanged)
         self.history = []
         self.history_idx = 0
+        self._tab_comp_handler = None
+
+    def set_tab_comp_handler(self, func):
+        self._tab_comp_handler = func
 
     def append(self, text):
         """ output text to the window"""
@@ -44,14 +48,18 @@ class CommandWindow(QPlainTextEdit):
         cursor.removeSelectedText()
         cursor.insertText(self.PROMPT)
 
+    def tab_complete(self, cmd):
+        self._tab_comp_handler(cmd)
+
     def keyPressEvent(self, event):
         """ handle if special key is pressed (enter, up, down, tab, etc) """
-        if event.key() == Qt.Key_Escape:
+        key = event.key()
+        if key == Qt.Key_Escape:
             self.clear_current_line()
             return
 
-        key_up = event.key() == Qt.Key_Up
-        key_down = event.key() == Qt.Key_Down
+        key_up = key == Qt.Key_Up
+        key_down = key == Qt.Key_Down
         if key_up or key_down:
             if self.history_idx == 0 and key_up:
                 return
@@ -67,17 +75,22 @@ class CommandWindow(QPlainTextEdit):
             return
         #reset history idx
         self.history_idx = len(self.history)
-        if event.key() == Qt.Key_Tab:
-            logging.info("TODO: completion")
-            return
-        if event.key() == Qt.Key_Backspace and self.textCursor().columnNumber() == 1:
+        if key == Qt.Key_Backspace and self.textCursor().columnNumber() == 1:
             return
 
-        if event.key() == Qt.Key_Return:
+        if key == Qt.Key_Tab or key == Qt.Key_Return:
             cmd = self.textCursor().block().text()
             cmd = str(cmd)
             cmd = cmd[1:]
             cmd = cmd.strip()
+            if not cmd:
+                return
+
+        if key == Qt.Key_Tab:
+            self.tab_complete(cmd)
+            return
+
+        if key == Qt.Key_Return:
             if not cmd and self.history_idx:
                 cmd = self.history[-1]
             if not cmd:
@@ -91,4 +104,3 @@ class CommandWindow(QPlainTextEdit):
             self.history_idx = len(self.history)
             return
         QPlainTextEdit.keyPressEvent(self, event)
-

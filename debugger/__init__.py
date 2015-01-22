@@ -5,8 +5,9 @@ This module contains wrapper classes of lldb objects for convenience
 """
 import lldb
 import re
-from lldb import SBTarget, SBProcess, SBDebugger, SBEvent,\
-                 SBCommandReturnObject, SBError, SBStream, SBBreakpoint
+from lldb import SBDebugger, SBStringList,\
+                 SBCommandReturnObject, SBError, SBStream
+import logging
 
 class Debugger(object):
     """This class represents a SBDebugger with some util functions"""
@@ -109,6 +110,20 @@ class Debugger(object):
             bp_lines.append(line_no)
         return bp_lines
 
+    def complete_tab(self, cmd):
+        candidates = SBStringList()
+        #TODO: currentl lldb only supports max_reeturn_elements == -1
+        logging.debug('complete: %s:%d:%d' %(cmd, len(cmd), cmd.rfind(' ')+1))
+        self._cmd_interp.HandleCompletion(cmd, len(cmd) - 1, cmd.rfind(' ') + 1, -1, candidates)
+        if candidates.GetSize() == 0:
+            return None
+        if candidates.GetSize() == 1:
+            return candidates[0]
+        msg = 'Candidates: '
+        for s in candidates:
+            msg += s + ' '
+        logging.info(msg)
+
     def execute(self, cmd, cmd_line):
         """do the 'execute' command """
         if cmd:
@@ -190,8 +205,3 @@ class Debugger(object):
         if thread is None:
             return
         thread.StepOut()
-
-
-
-
-

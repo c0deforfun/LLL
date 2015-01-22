@@ -66,6 +66,7 @@ class MainWindow(QtGui.QMainWindow):
         stdout_path = self.pty_stdout.get_file_path()
 
         self.debugger = Debugger(stdout_path, stdout_path, self.cfg_window.working_dir)
+        self.ui.commander.set_tab_comp_handler(self.debugger.complete_tab)
         self.last_highlighted_editor = None
         self.my_listener = MyListeningThread(self.debugger.dbg, self.FocusLine)
         self.FocusLine.connect(self.do_focus_line)
