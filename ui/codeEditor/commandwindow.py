@@ -97,10 +97,10 @@ class CommandWindow(QPlainTextEdit):
                 self.clear_current_line()
                 return
             # move to the next line
-            QPlainTextEdit.keyPressEvent(self, event)
-
             self.commandEntered.emit(cmd)
+            logging.debug('executing cmd:' + cmd)
             self.add_cmd_to_history(cmd)
             self.history_idx = len(self.history)
+            self.append('')
             return
         QPlainTextEdit.keyPressEvent(self, event)
