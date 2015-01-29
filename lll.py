@@ -310,6 +310,7 @@ class MainWindow(QtGui.QMainWindow):
         if line > 0:
             self.do_focus_line(src_filename, line)
         self.ui.source_tree.set_root(os.path.dirname(src_filename))
+        #self.debugger.disassemble(src_filename)
 
     def toggle_breakpoint(self, line_no):
         """ control the bp toggling"""

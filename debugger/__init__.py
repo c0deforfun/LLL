@@ -20,6 +20,7 @@ class Debugger(object):
         self._stderr = stderr
         self._workdir = workdir
         self._last_args = None
+        self.file_cu_mapping = {}
 
     @property
     def listener(self):
@@ -49,6 +50,7 @@ class Debugger(object):
             main function"""
         if len(exe_file_name) == 0:
             return None, -1
+        self.file_cu_mapping = {}
         exe_file_name = str(exe_file_name)
         #TODO: check arch
         self.target = self.dbg.CreateTargetWithFileAndArch(exe_file_name, \
@@ -205,3 +207,28 @@ class Debugger(object):
         if thread is None:
             return
         thread.StepOut()
+
+    def getCompileUnitFromFile(self, filename):
+        if not self.target or not self.target.IsValid():
+            return None
+        if filename in self.file_cu_mapping:
+            return self.file_cu_mappiing[filename]
+
+        for m in self.target.module_iter():
+            for cu in m.compile_unit_iter():
+                if filename == cu.GetFileSpec().fullpath:
+                    self.file_cu_mapping[filename] = cu
+                    return cu
+
+    def disassemble(self, filename):
+        cu = self.getCompileUnitFromFile(filename)
+        if not cu:
+            return
+        for line_entry in cu:
+            start_addr = line_entry.GetStartAddress()
+            end_addr = line_entry.GetEndAddress()
+            print('line %d : [%x %x]') %(line_entry.GetLine(), start_addr, end_addr)
+            instrs = self.target.ReadInstructions(start_addr, end_addr.offset - start_addr.offset)
+            for instr in instrs:
+                print('%s') %(instr)
+
