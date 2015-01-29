@@ -19,7 +19,10 @@ except ImportError:
     print('Unable to import python bindings of clang')
     sys.exit(1)
 
+settings = None
+
 def initialize():
+    global settings
     """ read config file and initialize sys path etc."""
     settings = QSettings('c0deforfun', 'lll')
     config_file = settings.fileName()
@@ -60,6 +63,7 @@ class MainWindow(QtGui.QMainWindow):
     def __init__(self):
         QtGui.QMainWindow.__init__(self)
         self.init_ui()
+        self.save_restore_state(False)
         self.cfg_window = RunConfigWindow()
         self.about_dialog = AboutDialog()
         self.pty_stdout = PtyView(self.ui.commander)
@@ -101,6 +105,11 @@ class MainWindow(QtGui.QMainWindow):
         self.action_Frames.setIcon(QIcon(":/icons/icons/frame.png"))
         self.ui.frame_viewer.set_focus_signal(self.FocusLine)
 
+        self.tabifyDockWidget(self.ui.frame_dock, self.ui.value_dock)
+        self.tabifyDockWidget(self.ui.value_dock, self.ui.bp_dock)
+        self.ui.frame_dock.raise_()
+
+
         # setup source file tree dock
         self.action_SourceTree = self.ui.file_tree_dock.toggleViewAction()
         self.ui.menuView.addAction(self.action_SourceTree)
@@ -139,8 +148,18 @@ class MainWindow(QtGui.QMainWindow):
         save_action.setEnabled(editor.document().isModified())
         menu.exec_(bar.mapToGlobal(point))
 
+    def save_restore_state(self, is_save):
+        global settings
+        if is_save:
+            settings.setValue('geometry', self.saveGeometry())
+            settings.setValue('windowState', self.saveState())
+        else:
+            self.restoreState(settings.value('windowState').toByteArray())
+            self.restoreGeometry(settings.value('geometry').toByteArray())
+
     def closeEvent(self, event):
         """overrided. when close event is triggered"""
+        self.save_restore_state(True)
         if not (self.debugger.curr_process and
                 self.debugger.curr_process.is_alive):
             event.accept()

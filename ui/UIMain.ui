@@ -252,6 +252,38 @@
     </layout>
    </widget>
   </widget>
+  <widget class="QDockWidget" name="value_dock">
+   <property name="windowTitle">
+    <string>Values</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>2</number>
+   </attribute>
+   <widget class="QWidget" name="dockWidgetContents_3"/>
+  </widget>
+  <widget class="QDockWidget" name="bp_dock">
+   <property name="windowTitle">
+    <string>Breakpoints</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>2</number>
+   </attribute>
+   <widget class="QWidget" name="dockWidgetContents_5">
+    <widget class="QLabel" name="label">
+     <property name="geometry">
+      <rect>
+       <x>100</x>
+       <y>70</y>
+       <width>221</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Under Construction</string>
+     </property>
+    </widget>
+   </widget>
+  </widget>
   <action name="action_Open">
    <property name="icon">
     <iconset>

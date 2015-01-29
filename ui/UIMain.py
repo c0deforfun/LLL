@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/UIMain.ui'
 #
-# Created: Sun Jan 18 23:47:31 2015
+# Created: Wed Jan 28 20:56:16 2015
 #      by: PyQt4 UI code generator 4.11.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -145,6 +145,21 @@ class Ui_MainWindow(object):
         self.verticalLayout_4.addWidget(self.source_tree)
         self.file_tree_dock.setWidget(self.dockWidgetContents_2)
         MainWindow.addDockWidget(QtCore.Qt.DockWidgetArea(1), self.file_tree_dock)
+        self.value_dock = QtGui.QDockWidget(MainWindow)
+        self.value_dock.setObjectName(_fromUtf8("value_dock"))
+        self.dockWidgetContents_3 = QtGui.QWidget()
+        self.dockWidgetContents_3.setObjectName(_fromUtf8("dockWidgetContents_3"))
+        self.value_dock.setWidget(self.dockWidgetContents_3)
+        MainWindow.addDockWidget(QtCore.Qt.DockWidgetArea(2), self.value_dock)
+        self.bp_dock = QtGui.QDockWidget(MainWindow)
+        self.bp_dock.setObjectName(_fromUtf8("bp_dock"))
+        self.dockWidgetContents_5 = QtGui.QWidget()
+        self.dockWidgetContents_5.setObjectName(_fromUtf8("dockWidgetContents_5"))
+        self.label = QtGui.QLabel(self.dockWidgetContents_5)
+        self.label.setGeometry(QtCore.QRect(100, 70, 221, 21))
+        self.label.setObjectName(_fromUtf8("label"))
+        self.bp_dock.setWidget(self.dockWidgetContents_5)
+        MainWindow.addDockWidget(QtCore.Qt.DockWidgetArea(2), self.bp_dock)
         self.action_Open = QtGui.QAction(MainWindow)
         icon4 = QtGui.QIcon()
         icon4.addPixmap(QtGui.QPixmap(_fromUtf8(":/icons/icons/fileOpen.png")), QtGui.QIcon.Normal, QtGui.QIcon.On)
@@ -247,6 +262,9 @@ class Ui_MainWindow(object):
         self.frame_dock.setWindowTitle(_translate("MainWindow", "Frames / Call Stack", None))
         self.chk_show_args.setText(_translate("MainWindow", "show args", None))
         self.file_tree_dock.setWindowTitle(_translate("MainWindow", "Source Files", None))
+        self.value_dock.setWindowTitle(_translate("MainWindow", "Values", None))
+        self.bp_dock.setWindowTitle(_translate("MainWindow", "Breakpoints", None))
+        self.label.setText(_translate("MainWindow", "Under Construction", None))
         self.action_Open.setText(_translate("MainWindow", "&Open...", None))
         self.action_Save.setText(_translate("MainWindow", "&Save", None))
         self.action_Save_As.setText(_translate("MainWindow", "Save &As", None))
