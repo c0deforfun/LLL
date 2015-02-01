@@ -1,6 +1,6 @@
 PY_INSTALLER=../PyInstaller-2.1/pyinstaller.py
 
-gen := ui/UIMain.py ui/UIRunConfig.py ui/UIAbout.py ui/resources_rc.py ui/UISourceFileTreeWidget.py
+gen := ui/UIMain.py ui/UIRunConfig.py ui/UIAbout.py ui/resources_rc.py ui/UISourceFileTreeWidget.py ui/UIValueViewerWidget.py
 
 all: $(gen)
 test: test.c

@@ -259,7 +259,13 @@
    <attribute name="dockWidgetArea">
     <number>2</number>
    </attribute>
-   <widget class="QWidget" name="dockWidgetContents_3"/>
+   <widget class="QWidget" name="dockWidgetContents_3">
+    <layout class="QVBoxLayout" name="verticalLayout_5">
+     <item>
+      <widget class="ValueViewerWidget" name="value_viewer" native="true"/>
+     </item>
+    </layout>
+   </widget>
   </widget>
   <widget class="QDockWidget" name="bp_dock">
    <property name="windowTitle">
@@ -461,6 +467,12 @@
    <class>SourceFileTreeWidget</class>
    <extends>QWidget</extends>
    <header>ui.SourceFileTreeWidget.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>ValueViewerWidget</class>
+   <extends>QWidget</extends>
+   <header>ui.ValueViewerWidget.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

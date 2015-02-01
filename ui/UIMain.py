@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/UIMain.ui'
 #
-# Created: Wed Jan 28 20:56:16 2015
+# Created: Wed Jan 28 21:43:39 2015
 #      by: PyQt4 UI code generator 4.11.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -149,6 +149,11 @@ class Ui_MainWindow(object):
         self.value_dock.setObjectName(_fromUtf8("value_dock"))
         self.dockWidgetContents_3 = QtGui.QWidget()
         self.dockWidgetContents_3.setObjectName(_fromUtf8("dockWidgetContents_3"))
+        self.verticalLayout_5 = QtGui.QVBoxLayout(self.dockWidgetContents_3)
+        self.verticalLayout_5.setObjectName(_fromUtf8("verticalLayout_5"))
+        self.value_viewer = ValueViewerWidget(self.dockWidgetContents_3)
+        self.value_viewer.setObjectName(_fromUtf8("value_viewer"))
+        self.verticalLayout_5.addWidget(self.value_viewer)
         self.value_dock.setWidget(self.dockWidgetContents_3)
         MainWindow.addDockWidget(QtCore.Qt.DockWidgetArea(2), self.value_dock)
         self.bp_dock = QtGui.QDockWidget(MainWindow)
@@ -288,8 +293,9 @@ class Ui_MainWindow(object):
         self.action_Frames.setText(_translate("MainWindow", "Frames", None))
         self.action_Frames_2.setText(_translate("MainWindow", "frames", None))
 
-from ui.UIStatusBar import StatusBar
-from ui.UIFrameInfoViewer import FrameInfoViewer
-from ui.SourceFileTreeWidget import SourceFileTreeWidget
 from ui.codeEditor.commandwindow import CommandWindow
+from ui.UIFrameInfoViewer import FrameInfoViewer
+from ui.ValueViewerWidget import ValueViewerWidget
+from ui.SourceFileTreeWidget import SourceFileTreeWidget
+from ui.UIStatusBar import StatusBar
 import resources_rc

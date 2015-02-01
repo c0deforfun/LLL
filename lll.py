@@ -49,13 +49,14 @@ try:
     from lldb import SBTarget, SBProcess, SBEvent, \
                      SBStream, SBBreakpoint
     from debugger import Debugger
-    from ui.UIMain import Ui_MainWindow
-    from ui.codeEditor import CodeEditor
-    from ui.UIRunConfigWindow import RunConfigWindow
-    from ui.About import AboutDialog
 except ImportError:
     print('Unable to import LLDB python modules')
     sys.exit(1)
+
+from ui.UIMain import Ui_MainWindow
+from ui.codeEditor import CodeEditor
+from ui.UIRunConfigWindow import RunConfigWindow
+from ui.About import AboutDialog
 
 class MainWindow(QtGui.QMainWindow):
     """ Main window of the debugger"""
@@ -134,6 +135,8 @@ class MainWindow(QtGui.QMainWindow):
         self.ui.commander.commandEntered.connect(self.do_command)
         self.connect(self.ui.action_Run_Config, QtCore.SIGNAL('triggered()'), self.do_config)
         self.connect(self.ui.action_About, QtCore.SIGNAL('triggered()'), self.show_about)
+
+        self.ui.frame_viewer.frame_changed.connect(self.ui.value_viewer.show_values)
 
     def show_tab_context_menu(self, point):
         if point.isNull():
