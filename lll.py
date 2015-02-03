@@ -136,7 +136,7 @@ class MainWindow(QtGui.QMainWindow):
         self.connect(self.ui.action_Run_Config, QtCore.SIGNAL('triggered()'), self.do_config)
         self.connect(self.ui.action_About, QtCore.SIGNAL('triggered()'), self.show_about)
 
-        self.ui.frame_viewer.frame_changed.connect(self.ui.value_viewer.show_values)
+        self.ui.frame_viewer.frame_changed.connect(self.ui.value_viewer.show_variables)
 
     def show_tab_context_menu(self, point):
         if point.isNull():
