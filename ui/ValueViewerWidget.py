@@ -26,6 +26,7 @@ class ValueViewerWidget(QWidget):
             value = ''
         value_item = QStandardItem(value)
         name_item = QStandardItem(v.name)
+        ty = v.type
         parent.appendRow([name_item, value_item, QStandardItem(ty.GetName())])
         # Lazy loading
         if v.GetNumChildren():
@@ -51,6 +52,8 @@ class ValueViewerWidget(QWidget):
             self.show_value(v, root)
             
         self.ui.tree.resizeColumnToContents(0)
+        self.ui.tree.resizeColumnToContents(1)
+        self.ui.tree.resizeColumnToContents(2)
 
     def on_expand(self, index):
         item = self.value_model.itemFromIndex(index)
@@ -60,3 +63,8 @@ class ValueViewerWidget(QWidget):
         item.removeRow(0)
         for child in v:
             self.show_value(child, item)
+        self.ui.tree.resizeColumnToContents(0)
+        self.ui.tree.resizeColumnToContents(1)
+        self.ui.tree.resizeColumnToContents(2)
+
+
