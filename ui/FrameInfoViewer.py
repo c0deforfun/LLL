@@ -1,4 +1,4 @@
-""" for showing message on status bar"""
+""" for showing/changing frames """
 from PyQt4.QtGui import QTreeView, QStandardItem, QStandardItemModel, QHeaderView
 from PyQt4.QtCore import pyqtSignal
 from lldb import SBFrame
@@ -6,7 +6,7 @@ import logging, logging.handlers
 
 
 class FrameInfoViewer(QTreeView):
-    """ Customized status bar  """
+    """ Main tree for frame info  """
     frame_changed = pyqtSignal(SBFrame)
     def __init__(self, parent):
         super(QTreeView, self).__init__(parent)

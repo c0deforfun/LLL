@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/UIMain.ui'
 #
-# Created: Sun Feb  8 19:40:10 2015
+# Created: Sun Feb  8 20:34:43 2015
 #      by: PyQt4 UI code generator 4.11.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -26,7 +26,7 @@ except AttributeError:
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName(_fromUtf8("MainWindow"))
-        MainWindow.resize(1205, 679)
+        MainWindow.resize(1216, 736)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -58,7 +58,7 @@ class Ui_MainWindow(object):
         self.verticalLayout.addWidget(self.commander)
         MainWindow.setCentralWidget(self.centralWidget)
         self.menuBar = QtGui.QMenuBar(MainWindow)
-        self.menuBar.setGeometry(QtCore.QRect(0, 0, 1205, 19))
+        self.menuBar.setGeometry(QtCore.QRect(0, 0, 1216, 19))
         self.menuBar.setObjectName(_fromUtf8("menuBar"))
         self.menu_File = QtGui.QMenu(self.menuBar)
         self.menu_File.setObjectName(_fromUtf8("menu_File"))
@@ -160,9 +160,11 @@ class Ui_MainWindow(object):
         self.bp_dock.setObjectName(_fromUtf8("bp_dock"))
         self.dockWidgetContents_5 = QtGui.QWidget()
         self.dockWidgetContents_5.setObjectName(_fromUtf8("dockWidgetContents_5"))
-        self.label = QtGui.QLabel(self.dockWidgetContents_5)
-        self.label.setGeometry(QtCore.QRect(100, 70, 221, 21))
-        self.label.setObjectName(_fromUtf8("label"))
+        self.horizontalLayout = QtGui.QHBoxLayout(self.dockWidgetContents_5)
+        self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
+        self.bp_viewer = BreakpointsViewer(self.dockWidgetContents_5)
+        self.bp_viewer.setObjectName(_fromUtf8("bp_viewer"))
+        self.horizontalLayout.addWidget(self.bp_viewer)
         self.bp_dock.setWidget(self.dockWidgetContents_5)
         MainWindow.addDockWidget(QtCore.Qt.DockWidgetArea(2), self.bp_dock)
         self.action_Open = QtGui.QAction(MainWindow)
@@ -269,7 +271,6 @@ class Ui_MainWindow(object):
         self.file_tree_dock.setWindowTitle(_translate("MainWindow", "Source Files", None))
         self.value_dock.setWindowTitle(_translate("MainWindow", "Values", None))
         self.bp_dock.setWindowTitle(_translate("MainWindow", "Breakpoints", None))
-        self.label.setText(_translate("MainWindow", "Under Construction", None))
         self.action_Open.setText(_translate("MainWindow", "&Open...", None))
         self.action_Save.setText(_translate("MainWindow", "&Save", None))
         self.action_Save_As.setText(_translate("MainWindow", "Save &As", None))
@@ -293,9 +294,10 @@ class Ui_MainWindow(object):
         self.action_Frames.setText(_translate("MainWindow", "Frames", None))
         self.action_Frames_2.setText(_translate("MainWindow", "frames", None))
 
-from ui.StatusBar import StatusBar
-from ui.SourceFileTreeWidget import SourceFileTreeWidget
-from ui.ValueViewerWidget import ValueViewerWidget
-from ui.FrameInfoViewer import FrameInfoViewer
 from ui.commandwindow import CommandWindow
+from ui.FrameInfoViewer import FrameInfoViewer
+from ui.SourceFileTreeWidget import SourceFileTreeWidget
+from ui.StatusBar import StatusBar
+from ui.BreakpointsViewer import BreakpointsViewer
+from ui.ValueViewerWidget import ValueViewerWidget
 import resources_rc

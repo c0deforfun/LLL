@@ -272,6 +272,7 @@ class MainWindow(QtGui.QMainWindow):
 
     def on_bp_changed(self, breakpoint, bp_type):
         """ handler of breakpoing changing"""
+        self.ui.bp_viewer.update_bp_info(self.debugger.dbg.GetSelectedTarget())
         # TODO: might be multiple locations for a BP
         filename, line_no = self.debugger.getBPLocationFromDesc(breakpoint)
         if not filename or not line_no:
