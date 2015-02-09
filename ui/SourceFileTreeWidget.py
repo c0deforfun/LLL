@@ -34,9 +34,11 @@ class SourceFileTreeWidget(QWidget):
         self.open_file_signal = None
 
     def set_open_file_signal(self, signal):
+        """ callback to signal file opening """
         self.open_file_signal = signal
 
-    def set_root(self, root = None, use_common_prefix = True):
+    def set_root(self, root=None, use_common_prefix=True):
+        """ set the root path of the widget """
         curr = str(self.ui.custom_root.text())
         if not root:
             use_common_prefix = False # input text box will override it.
@@ -54,21 +56,24 @@ class SourceFileTreeWidget(QWidget):
             return
         self.ui.tree.setRootIndex(idx)
         self.ui.tree.setExpanded(idx, True)
-    
+
     def set_filter(self):
+        """ set filter by extension """
         filters = str(self.ui.custom_filter.text()).split(';')
         self.file_model.setNameFilters(filters)
         self.file_model.setNameFilterDisables(False)
 
     def open_file(self, idx):
+        """ emit file opening signal """
         if self.file_model.isDir(idx):
             return
         fullpath = self.file_model.filePath(idx)
         if self.open_file_signal:
             self.open_file_signal.emit(str(fullpath), 0)
 
-    def set_file_selected(self, tabIdx):
-        filename = self.sender().tabToolTip(tabIdx)
+    def set_file_selected(self, tab_idx):
+        """ slot to associate the file in active tab """
+        filename = self.sender().tabToolTip(tab_idx)
         idx = self.file_model.index(filename)
         if idx.isValid():
             self.ui.tree.selectionModel().select(idx, QItemSelectionModel.ClearAndSelect)

@@ -1,6 +1,5 @@
 """ for showing message on status bar"""
 from PyQt4.QtGui import QStatusBar, QLabel
-import lldb
 import logging, logging.handlers
 
 
@@ -12,7 +11,6 @@ class StatusLogHandler(logging.Handler):
 
     def emit(self, record):
         self.status_bar.log_message(record.levelno, record.message)
-
 
 class StatusBar(QStatusBar):
     """ Customized status bar  """
@@ -30,4 +28,5 @@ class StatusBar(QStatusBar):
         self.showMessage(msg)
 
     def update_state(self, state):
+        """ show status info """
         self.state_label.setText(state)

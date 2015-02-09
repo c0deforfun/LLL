@@ -456,12 +456,12 @@
   <customwidget>
    <class>StatusBar</class>
    <extends>QStatusBar</extends>
-   <header>ui.UIStatusBar.h</header>
+   <header>ui.StatusBar.h</header>
   </customwidget>
   <customwidget>
    <class>FrameInfoViewer</class>
    <extends>QTreeView</extends>
-   <header>ui.UIFrameInfoViewer.h</header>
+   <header>ui.FrameInfoViewer.h</header>
   </customwidget>
   <customwidget>
    <class>SourceFileTreeWidget</class>

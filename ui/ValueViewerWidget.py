@@ -1,6 +1,5 @@
 """ for showing source file tree"""
 from PyQt4.QtGui import QWidget, QHeaderView, QStandardItemModel, QStandardItem
-import logging, os
 
 from ui.UIValueViewerWidget import Ui_ValueViewerWidget
 
@@ -19,49 +18,51 @@ class ValueViewerWidget(QWidget):
         header.setResizeMode(QHeaderView.ResizeToContents)
         self.idx_value = {}
 
-    def show_value(self, v, parent):
-        value = v.value
-        ty = v.type
+    def show_value(self, var, parent):
+        """ show the value of a variable """
+        value = var.value
         if not value:
             value = ''
         value_item = QStandardItem(value)
-        name_item = QStandardItem(v.name)
-        ty = v.type
-        parent.appendRow([name_item, value_item, QStandardItem(ty.GetName())])
+        name_item = QStandardItem(var.name)
+        parent.appendRow([name_item, value_item, QStandardItem(var.type.GetName())])
         # Lazy loading
-        if v.GetNumChildren():
+        if var.GetNumChildren():
             dummy_item = QStandardItem('Loading...')
             dummy_item.setEnabled(False)
             row_loading = [dummy_item, QStandardItem(''), QStandardItem('')]
-            self.idx_value[name_item.index()] = v
+            self.idx_value[name_item.index()] = var
             name_item.appendRow(row_loading)
 
     def show_variables(self, frame):
+        """ show variables in widget """
         #args = frame.get_arguments()
         #statics = frame.get_statics()
         #autos = frame.get_locals()
 
-        # v.GetValueType() : eValueType{Invalid,Register,RegisterSet,VariableArgument,VariableGlobal,VariableLocal,VariableStatic
+        # v.GetValueType() : eValueType{Invalid,Register,RegisterSet,VariableArgument,
+        #                               VariableGlobal,VariableLocal,VariableStatic
         self.value_model.clear()
         self.idx_value.clear()
 
         self.value_model.setHorizontalHeaderLabels(['Name', 'Value', 'Type'])
         vals = frame.GetVariables(True, True, True, False)
         root = self.value_model.invisibleRootItem()
-        for v in vals:
-            self.show_value(v, root)
-            
+        for val in vals:
+            self.show_value(val, root)
+
         self.ui.tree.resizeColumnToContents(0)
         self.ui.tree.resizeColumnToContents(1)
         self.ui.tree.resizeColumnToContents(2)
 
     def on_expand(self, index):
+        """ load sub values when first expanded """
         item = self.value_model.itemFromIndex(index)
         if item.rowCount() != 1 or item.child(0).isEnabled():
             return
-        v = self.idx_value[index]
+        var = self.idx_value[index]
         item.removeRow(0)
-        for child in v:
+        for child in var:
             self.show_value(child, item)
         self.ui.tree.resizeColumnToContents(0)
         self.ui.tree.resizeColumnToContents(1)

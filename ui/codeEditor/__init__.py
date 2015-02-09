@@ -15,7 +15,7 @@ import os
 class CodeEditor(QPlainTextEdit):
     """ the main widget for displaying source code"""
 
-    def __init__(self, tabWidget = None):
+    def __init__(self, tabWidget=None):
         QPlainTextEdit.__init__(self)
 
         self.line_number_area = LineNumberArea(self)
@@ -38,7 +38,7 @@ class CodeEditor(QPlainTextEdit):
         save_action.setShortcut(QKeySequence.Save)
         self.connect(save_action, QtCore.SIGNAL('triggered()'), self.save)
         self.addAction(save_action)
-        
+
 
     def open_source_file(self, filename):
         """open and show source file"""
@@ -56,12 +56,11 @@ class CodeEditor(QPlainTextEdit):
                     self.tabs.setTabIcon(idx, QIcon(":/icons/icons/locked.png"))
 
     def save(self):
+        """ save changes of source file"""
         if os.access(self.source_file, os.W_OK):
             with open(self.source_file, 'w') as f:
                 f.write(self.toPlainText())
                 self.document().setModified(False)
- 
-
 
     def _update_line_number_area_width(self):
         """ change line number area width based on total lines"""
@@ -100,6 +99,6 @@ class CodeEditor(QPlainTextEdit):
         idx = self.tabs.indexOf(self)
         filename = os.path.basename(self.source_file)
         if is_modified:
-            self.tabs.setTabText(idx,filename + '*')
+            self.tabs.setTabText(idx, filename + '*')
         else:
             self.tabs.setTabText(idx, filename)

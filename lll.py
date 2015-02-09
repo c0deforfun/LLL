@@ -6,37 +6,37 @@ import logging
 
 try:
     from ptyview import PtyView
+    from PyQt4 import QtGui
+    from PyQt4 import QtCore, Qt
     from PyQt4.QtCore import QThread, QSettings, pyqtSignal
-    from PyQt4 import QtGui, QtCore, Qt
-    from PyQt4.QtGui import QMessageBox, QAction, QIcon, QMenu
+    from PyQt4.QtGui import QMessageBox, QIcon, QMenu
 except ImportError:
-    print('Unable to import PyQt4')
+    logging.fatal('Unable to import PyQt4')
     sys.exit(1)
 
 try:
     import clang.cindex
 except ImportError:
-    print('Unable to import python bindings of clang')
+    logging.fatal('Unable to import python bindings of clang')
     sys.exit(1)
 
-settings = None
+SETTINGS = QSettings('c0deforfun', 'lll')
 
 def initialize():
-    global settings
-    """ read config file and initialize sys path etc."""
-    settings = QSettings('c0deforfun', 'lll')
-    config_file = settings.fileName()
-    settings.beginGroup('common')
+    """ initialize module imports"""
+    config_file = SETTINGS.fileName()
+    SETTINGS.beginGroup('common')
     if not os.path.exists(config_file):
-        settings.setValue('clang_lib_path', 'llvm-install-prefix/lib')
-        settings.setValue('lldb_path', 'llvm-install-prefix/lib/python2.7/site-packages')
-        settings.setValue('logging_level', 'INFO')
+        SETTINGS.setValue('clang_lib_path', 'llvm-install-prefix/lib')
+        SETTINGS.setValue('lldb_path', 'llvm-install-prefix/lib/python2.7/site-packages')
+        SETTINGS.setValue('logging_level', 'INFO')
         logging.fatal('Please config ' + config_file)
-        
-    clang_lib_path = str(settings.value('clang_lib_path', '').toString())
-    lldb_path = str(settings.value('lldb_path', clang_lib_path + '/lib/python2.7/site-packages').toString())
-    logging_level = str(settings.value('logging_level', 'logging.INFO').toString())
-    settings.endGroup()
+
+    clang_lib_path = str(SETTINGS.value('clang_lib_path', '').toString())
+    lldb_path = str(SETTINGS.value('lldb_path', clang_lib_path + \
+            '/lib/python2.7/site-packages').toString())
+    logging_level = str(SETTINGS.value('logging_level', 'logging.INFO').toString())
+    SETTINGS.endGroup()
 
     sys.path.append(lldb_path)
     clang.cindex.Config.set_library_path(clang_lib_path)
@@ -46,16 +46,16 @@ initialize()
 
 try:
     import lldb
-    from lldb import SBTarget, SBProcess, SBEvent, \
+    from lldb import SBDebugger, SBTarget, SBProcess, SBEvent, \
                      SBStream, SBBreakpoint
     from debugger import Debugger
 except ImportError:
-    print('Unable to import LLDB python modules')
+    logging.fatal('Unable to import LLDB python modules')
     sys.exit(1)
 
 from ui.UIMain import Ui_MainWindow
 from ui.codeEditor import CodeEditor
-from ui.UIRunConfigWindow import RunConfigWindow
+from ui.RunConfigWindow import RunConfigWindow
 from ui.About import AboutDialog
 
 class MainWindow(QtGui.QMainWindow):
@@ -100,10 +100,10 @@ class MainWindow(QtGui.QMainWindow):
         self.ui.tabCodeEditor.setTabShape(QtGui.QTabWidget.Triangular)
 
         # setup frame viewer dock
-        self.action_Frames = self.ui.frame_dock.toggleViewAction()
-        self.ui.menuView.addAction(self.action_Frames)
-        self.action_Frames.setCheckable(True)
-        self.action_Frames.setIcon(QIcon(":/icons/icons/frame.png"))
+        action_frames = self.ui.frame_dock.toggleViewAction()
+        self.ui.menuView.addAction(action_frames)
+        action_frames.setCheckable(True)
+        action_frames.setIcon(QIcon(":/icons/icons/frame.png"))
         self.ui.frame_viewer.set_focus_signal(self.FocusLine)
 
         self.tabifyDockWidget(self.ui.frame_dock, self.ui.value_dock)
@@ -112,10 +112,10 @@ class MainWindow(QtGui.QMainWindow):
 
 
         # setup source file tree dock
-        self.action_SourceTree = self.ui.file_tree_dock.toggleViewAction()
-        self.ui.menuView.addAction(self.action_SourceTree)
-        self.action_SourceTree.setCheckable(True)
-        self.action_SourceTree.setIcon(QIcon(":/icons/icons/directory.png"))
+        action_source_tree = self.ui.file_tree_dock.toggleViewAction()
+        self.ui.menuView.addAction(action_source_tree)
+        action_source_tree.setCheckable(True)
+        action_source_tree.setIcon(QIcon(":/icons/icons/directory.png"))
         self.ui.source_tree.set_open_file_signal(self.FocusLine)
 
         self.connect(self.ui.action_Open, QtCore.SIGNAL('triggered()'), self.do_exe_file_open)
@@ -123,13 +123,16 @@ class MainWindow(QtGui.QMainWindow):
         self.connect(self.ui.action_StepOver, QtCore.SIGNAL('triggered()'), self.do_step_over)
         self.connect(self.ui.action_StepInto, QtCore.SIGNAL('triggered()'), self.do_step_into)
         self.connect(self.ui.action_StepOut, QtCore.SIGNAL('triggered()'), self.do_step_out)
-        self.connect(self.ui.btn_frame_up, QtCore.SIGNAL('clicked()'), self.ui.frame_viewer.up)
-        self.connect(self.ui.btn_frame_down, QtCore.SIGNAL('clicked()'), self.ui.frame_viewer.down)
+        self.connect(self.ui.btn_frame_up, QtCore.SIGNAL('clicked()'), self.ui.frame_viewer.frame_up)
+        self.connect(self.ui.btn_frame_down, QtCore.SIGNAL('clicked()'), self.ui.frame_viewer.frame_down)
         self.ui.frame_viewer.set_show_args(self.ui.chk_show_args)
 
-        self.connect(self.ui.tabCodeEditor, QtCore.SIGNAL('tabCloseRequested(int)'), self.close_tab)
-        self.connect(self.ui.tabCodeEditor, QtCore.SIGNAL('currentChanged(int)'), self.ui.source_tree.set_file_selected)
-        self.connect(self.ui.tabCodeEditor, QtCore.SIGNAL('customContextMenuRequested(QPoint)'), self.show_tab_context_menu)
+        self.connect(self.ui.tabCodeEditor, QtCore.SIGNAL('tabCloseRequested(int)'),
+                     self.close_tab)
+        self.connect(self.ui.tabCodeEditor, QtCore.SIGNAL('currentChanged(int)'),
+                     self.ui.source_tree.set_file_selected)
+        self.connect(self.ui.tabCodeEditor, QtCore.SIGNAL('customContextMenuRequested(QPoint)'),
+                     self.show_tab_context_menu)
 
         self.ui.action_Exit.triggered.connect(Qt.qApp.quit)
         self.ui.commander.commandEntered.connect(self.do_command)
@@ -139,26 +142,27 @@ class MainWindow(QtGui.QMainWindow):
         self.ui.frame_viewer.frame_changed.connect(self.ui.value_viewer.show_variables)
 
     def show_tab_context_menu(self, point):
+        """ show context menu for tabs"""
         if point.isNull():
             return
-        bar = self.ui.tabCodeEditor.tabBar()
-        idx = bar.tabAt(point)
+        tab_bar = self.ui.tabCodeEditor.tabBar()
+        idx = tab_bar.tabAt(point)
         if idx < 0:
             return
         editor = self.ui.tabCodeEditor.widget(idx)
-        menu = QMenu(bar)
+        menu = QMenu(tab_bar)
         save_action = menu.addAction(QIcon(":/icons/icons/save.png"), 'Save', editor.save)
         save_action.setEnabled(editor.document().isModified())
-        menu.exec_(bar.mapToGlobal(point))
+        menu.exec_(tab_bar.mapToGlobal(point))
 
     def save_restore_state(self, is_save):
-        global settings
+        """ save/restore state to/from config file"""
         if is_save:
-            settings.setValue('geometry', self.saveGeometry())
-            settings.setValue('windowState', self.saveState())
+            SETTINGS.setValue('geometry', self.saveGeometry())
+            SETTINGS.setValue('windowState', self.saveState())
         else:
-            self.restoreState(settings.value('windowState').toByteArray())
-            self.restoreGeometry(settings.value('geometry').toByteArray())
+            self.restoreState(SETTINGS.value('windowState').toByteArray())
+            self.restoreGeometry(SETTINGS.value('geometry').toByteArray())
 
     def closeEvent(self, event):
         """overrided. when close event is triggered"""
@@ -175,14 +179,13 @@ class MainWindow(QtGui.QMainWindow):
         else:
             event.ignore()
 
-    def showTabContextMenu(self, point):
-        print('context:%s') %str(point)
-
     def close_tab(self, idx):
+        """ close a tab"""
         editor = self.ui.tabCodeEditor.widget(idx)
         if editor.document().isModified():
-            reply = QtGui.QMessageBox.question(self, 'Message', editor.source_file + ' has been modified', \
-                                           QMessageBox.Save, QMessageBox.Discard, QMessageBox.Cancel)
+            reply = QtGui.QMessageBox.question(self, 'Message', \
+                    editor.source_file + ' has been modified', \
+                    QMessageBox.Save, QMessageBox.Discard, QMessageBox.Cancel)
             if reply == QtGui.QMessageBox.Cancel:
                 return
             if reply == QMessageBox.Save:
@@ -241,23 +244,9 @@ class MainWindow(QtGui.QMainWindow):
                 editor.focus_line(line_no)
                 self.last_highlighted_editor = editor
 
-    @staticmethod
-    def get_state_name(state):
-        names = {lldb.eStateCrashed : 'Crashed',
-                 lldb.eStateExited : 'Exited',
-                 lldb.eStateLaunching : 'Launching',
-                 lldb.eStateRunning : 'Running',
-                 lldb.eStateStepping : 'Stepping',
-                 lldb.eStateStopped : 'Stopped',
-                 lldb.eStateSuspended : 'Suspended'}
-        if state in names:
-            return names[state]
-        else:
-            return 'Unknown'
-
     def on_state_changed(self, state):
         """slot for state change event"""
-        self.ui.statusBar.update_state(self.get_state_name(state))
+        self.ui.statusBar.update_state(SBDebugger.StateAsCString(state))
         process = self.debugger.curr_process
         steppable = process is not None and process.is_alive and state == lldb.eStateStopped
         if steppable:
@@ -269,7 +258,7 @@ class MainWindow(QtGui.QMainWindow):
             self.ui.action_StepOver.setEnabled(steppable)
             self.ui.action_StepInto.setEnabled(steppable)
             self.ui.action_StepOut.setEnabled(steppable)
-        self.ui.action_Run.setEnabled(state!=lldb.eStateRunning)
+        self.ui.action_Run.setEnabled(state != lldb.eStateRunning)
 
         if state == lldb.eStateExited or state == lldb.eStateCrashed \
            or state == lldb.eStateSuspended:
@@ -281,9 +270,10 @@ class MainWindow(QtGui.QMainWindow):
             self.ui.frame_viewer.clear()
             return
 
-    def on_bp_changed(self, bp, bp_type):
+    def on_bp_changed(self, breakpoint, bp_type):
+        """ handler of breakpoing changing"""
         # TODO: might be multiple locations for a BP
-        filename, line_no = self.debugger.getBPLocationFromDesc(bp)
+        filename, line_no = self.debugger.getBPLocationFromDesc(breakpoint)
         if not filename or not line_no:
             logging.warning('Cannot find location from BP')
             return
@@ -311,6 +301,7 @@ class MainWindow(QtGui.QMainWindow):
             lna.repaint()
 
     def close_src_file(self, name):
+        """ close a source file"""
         editor = self.opened_files[name]
         editor.setParent(None)
         del self.opened_files[name]
@@ -413,10 +404,55 @@ class MyListeningThread(QThread):
         self.sb_listener.StartListeningForEvents(broadcaster, mask)
         self.process_broadcaster = broadcaster
 
+    def handle_stop_state(self, process):
+        """ handle stopped state"""
+        target = self.dbg.GetSelectedTarget()
+        for thread in process:
+            reason = thread.GetStopReason()
+            if reason == lldb.eStopReasonBreakpoint:
+                #assert(thread.GetStopReasonDataCount() == 2)
+                bp_id = thread.GetStopReasonDataAtIndex(0)
+                logging.debug('bp_id:%s', bp_id)
+                breakpoint = target.FindBreakpointByID(int(bp_id))
+                if breakpoint.GetNumLocations() == 1:
+                    bp_loc = breakpoint.GetLocationAtIndex(0)
+                else:
+                    bp_loc_id = thread.GetStopReasonDataAtIndex(1)
+                    bp_loc = breakpoint.FindLocationByID(bp_loc_id)
+                line_entry = bp_loc.GetAddress().GetLineEntry()
+                file_spec = line_entry.GetFileSpec()
+                filename = file_spec.fullpath
+                line_no = line_entry.GetLine()
+                logging.debug('stopped for BP %d: %s:%d', bp_id, filename, line_no)
+                if filename is not None:
+                    self.focus_signal.emit(filename, int(line_no))
+                else:
+                    self.focus_signal.emit('', -1)
+            elif reason == lldb.eStopReasonWatchpoint or \
+                 reason == lldb.eStopReasonPlanComplete:
+                frame = thread.GetFrameAtIndex(0)
+                line_entry = frame.GetLineEntry()
+                file_spec = line_entry.GetFileSpec()
+                filename = file_spec.fullpath
+                line_no = line_entry.GetLine()
+                logging.debug('stopped @ %s:%d', filename, line_no)
+                if filename is not None:
+                    self.focus_signal.emit(filename, int(line_no))
+                break
+            elif reason == lldb.eStopReasonThreadExiting:
+                logging.debug('thread exit')
+            elif reason == lldb.eStopReasonSignal or \
+                 reason == lldb.eStopReasonException:
+                logging.debug('signal/exception %x', thread.GetStopReasonDataAtIndex(0))
+
+            elif reason == lldb.eStopReasonExec:
+                logging.debug('re-run')
+
+
     def run(self):
         """ listerning loop"""
         event = SBEvent()
-        ss = SBStream()
+        stream = SBStream()
         while self.sb_listener.IsValid():
             self.sb_listener.WaitForEvent(1, event)
             if not event.IsValid():
@@ -430,9 +466,9 @@ class MyListeningThread(QThread):
                 continue
             # Handle BP events
             if SBBreakpoint.EventIsBreakpointEvent(event):
-                type = SBBreakpoint.GetBreakpointEventTypeFromEvent(event)
-                bp = SBBreakpoint.GetBreakpointFromEvent(event)
-                self.BPChanged.emit(bp, type)
+                val_type = SBBreakpoint.GetBreakpointEventTypeFromEvent(event)
+                breakpoint = SBBreakpoint.GetBreakpointFromEvent(event)
+                self.BPChanged.emit(breakpoint, val_type)
                 continue
 
             state = None
@@ -441,52 +477,12 @@ class MyListeningThread(QThread):
                 process = SBProcess.GetProcessFromEvent(event)
                 state = process.GetState()
                 if state == lldb.eStateStopped:
-                    for thread in process:
-                        reason = thread.GetStopReason()
-                        if reason == lldb.eStopReasonBreakpoint:
-                            #assert(thread.GetStopReasonDataCount() == 2)
-                            bp_id = thread.GetStopReasonDataAtIndex(0)
-                            logging.debug('bp_id:%s', bp_id)
-                            bp = target.FindBreakpointByID(int(bp_id))
-                            if bp.GetNumLocations() == 1:
-                                bp_loc = bp.GetLocationAtIndex(0)
-                            else:
-                                bp_loc_id = thread.GetStopReasonDataAtIndex(1)
-                                bp_loc = bp.FindLocationByID(bp_loc_id)
-                            line_entry = bp_loc.GetAddress().GetLineEntry()
-                            file_spec = line_entry.GetFileSpec()
-                            filename = file_spec.fullpath
-                            line_no = line_entry.GetLine()
-                            logging.debug('stopped for BP %d: %s:%d', bp_id, filename, line_no)
-                            if filename is not None:
-                                self.focus_signal.emit(filename, int(line_no))
-                            else:
-                                self.focus_signal.emit('', -1)
-                        elif reason == lldb.eStopReasonWatchpoint or \
-                             reason == lldb.eStopReasonPlanComplete:
-                            frame = thread.GetFrameAtIndex(0)
-                            line_entry = frame.GetLineEntry()
-                            file_spec = line_entry.GetFileSpec()
-                            filename = file_spec.fullpath
-                            line_no = line_entry.GetLine()
-                            logging.debug('stopped @ %s:%d', filename, line_no)
-                            if filename is not None:
-                                self.focus_signal.emit(filename, int(line_no))
-                            break
-                        elif reason == lldb.eStopReasonThreadExiting:
-                            logging.debug('thread exit')
-                        elif reason == lldb.eStopReasonSignal or \
-                             reason == lldb.eStopReasonException:
-                            logging.debug('signal/exception %x', thread.GetStopReasonDataAtIndex(0))
-
-                        elif reason == lldb.eStopReasonExec:
-                            logging.debug('re-run')
-
+                    self.handle_stop_state(process)
             if state is not None:
                 self.StateChanged.emit(state)
-            event.GetDescription(ss)
-            logging.debug('Event desc: %s', ss.GetData())
-            ss.Clear()
+            event.GetDescription(stream)
+            logging.debug('Event desc: %s', stream.GetData())
+            stream.Clear()
             event.Clear()
 
 def main():

@@ -16,6 +16,7 @@ class CommandWindow(QPlainTextEdit):
         self._tab_comp_handler = None
 
     def set_tab_comp_handler(self, func):
+        """ set signal for tab completion """
         self._tab_comp_handler = func
 
     def append(self, text):
@@ -35,11 +36,13 @@ class CommandWindow(QPlainTextEdit):
             self.setReadOnly(True)
 
     def add_cmd_to_history(self, cmd):
+        """ append command to history """
         if cmd in self.history:
             self.history.remove(cmd)
         self.history.append(cmd)
 
     def clear_current_line(self):
+        """ clear the input on current line """
         if self.isReadOnly():
             return
         cursor = self.textCursor()
@@ -49,7 +52,22 @@ class CommandWindow(QPlainTextEdit):
         cursor.insertText(self.PROMPT)
 
     def tab_complete(self, cmd):
+        """ complete on tab pressed """
         self._tab_comp_handler(cmd)
+
+    def execute_command(self, cmd):
+        """ execute command when enter is pressed """
+        if not cmd and self.history_idx:
+            cmd = self.history[-1]
+        if cmd:
+            # move to the next line
+            self.commandEntered.emit(cmd)
+            logging.debug('executing cmd:' + cmd)
+            self.add_cmd_to_history(cmd)
+            self.history_idx = len(self.history)
+            self.append('')
+        else:
+            self.clear_current_line()
 
     def keyPressEvent(self, event):
         """ handle if special key is pressed (enter, up, down, tab, etc) """
@@ -61,9 +79,8 @@ class CommandWindow(QPlainTextEdit):
         key_up = key == Qt.Key_Up
         key_down = key == Qt.Key_Down
         if key_up or key_down:
-            if self.history_idx == 0 and key_up:
-                return
-            if self.history_idx == len(self.history) -1 and key_down:
+            if (self.history_idx == 0 and key_up) or \
+                (self.history_idx == len(self.history) -1 and key_down):
                 return
             if key_up:
                 self.history_idx -= 1
@@ -73,6 +90,7 @@ class CommandWindow(QPlainTextEdit):
             self.clear_current_line()
             self.textCursor().insertText(cmd)
             return
+
         #reset history idx
         self.history_idx = len(self.history)
         if key == Qt.Key_Backspace and self.textCursor().columnNumber() == 1:
@@ -91,16 +109,7 @@ class CommandWindow(QPlainTextEdit):
             return
 
         if key == Qt.Key_Return:
-            if not cmd and self.history_idx:
-                cmd = self.history[-1]
-            if not cmd:
-                self.clear_current_line()
-                return
-            # move to the next line
-            self.commandEntered.emit(cmd)
-            logging.debug('executing cmd:' + cmd)
-            self.add_cmd_to_history(cmd)
-            self.history_idx = len(self.history)
-            self.append('')
+            self.execute_command(cmd)
             return
+
         QPlainTextEdit.keyPressEvent(self, event)

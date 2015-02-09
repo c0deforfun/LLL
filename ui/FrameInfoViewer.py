@@ -18,18 +18,21 @@ class FrameInfoViewer(QTreeView):
         self.frame_data = QStandardItemModel()
         self.setModel(self.frame_data)
         self.setAlternatingRowColors(True)
-        self.topFrame = None
-        self.frames =  {}
+        self.top_frame = None
+        self.frames = {}
 
     def set_focus_signal(self, signal):
+        """ set callback to focus source file line"""
         self.focus_signal = signal
 
     def clear(self):
+        """ clear the widget"""
         self.frame_data.clear()
         self.frame_data.setColumnCount(2)
-        self.frame_data.setHorizontalHeaderLabels(['',''])
+        self.frame_data.setHorizontalHeaderLabels(['', ''])
 
     def show_frame_info(self, process):
+        """ show the frame info """
         if not self.isVisible:
             return
         #TODO: no update if top frame is the same
@@ -54,8 +57,8 @@ class FrameInfoViewer(QTreeView):
             dummy.setSelectable(False)
             root.appendRow([thread_row, dummy])
             if len(thread.frames):
-                self.topFrame = thread.frames[0]
-                self.frame_changed.emit(self.topFrame)
+                self.top_frame = thread.frames[0]
+                self.frame_changed.emit(self.top_frame)
             for frame in thread.frames:
                 # first show the frame on the top of call stack.
                 frame_idx = '#%d: ' % frame.idx
@@ -64,7 +67,7 @@ class FrameInfoViewer(QTreeView):
                 if frame.name:
                     frame_idx += frame.name
                     if self._show_args.isChecked():
-                        args = ','.join(map(str, frame.args))
+                        args = ','.join([str(x) for x in frame.args])
                         frame_info += ' (%s)' % args
                 line = frame.line_entry
                 if line:
@@ -89,17 +92,21 @@ class FrameInfoViewer(QTreeView):
 
         self.expandToDepth(1)
 
-    def up(self):
+    def frame_up(self):
+        """ set frame to one level up """
         pass
 
-    def down(self):
+    def frame_down(self):
+        """ set frame to one level down """
         pass
 
     def set_show_args(self, widget):
+        """ set the checkbox of showing func args"""
         self._show_args = widget
 
     def mousePressEvent(self, event):
-        idx = self.indexAt(event.pos());
+        """ overrided """
+        idx = self.indexAt(event.pos())
         if idx.isValid() and self.focus_signal:
             model = idx.model()
             idx = idx.sibling(idx.row(), 0)
@@ -114,6 +121,6 @@ class FrameInfoViewer(QTreeView):
                         self.frame_changed.emit(self.frames[item])
 
                     else:
-                        logging.ERROR('frame cannot find associated source file')
+                        logging.error('frame cannot find associated source file')
 
         QTreeView.mousePressEvent(self, event)

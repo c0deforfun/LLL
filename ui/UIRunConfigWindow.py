@@ -1,49 +1,58 @@
-""" for configuring working dir and args"""
-from PyQt4.QtGui import QDialog
-from ui.UIRunConfig import Ui_DiagRunConfig
-import os
+# -*- coding: utf-8 -*-
 
-class RunConfigWindow(QDialog):
-    """ Config window"""
-    def __init__(self):
-        super(RunConfigWindow, self).__init__()
-        self.ui = Ui_DiagRunConfig()
-        self.ui.setupUi(self)
-        self._arglist = []
-        self._working_dir = os.getcwd()
+# Form implementation generated from reading ui file 'ui/UIRunConfigWindow.ui'
+#
+# Created: Sun Feb  8 12:30:31 2015
+#      by: PyQt4 UI code generator 4.11.3
+#
+# WARNING! All changes made in this file will be lost!
 
-    def reset(self):
-        """ discard inputs """
-        self.ui.txtWorkDir.setText(self._working_dir)
-        self.ui.txtArgs.setPlainText(' '.join(self._arglist))
+from PyQt4 import QtCore, QtGui
 
-    @property
-    def arglist(self):
-        return self._arglist
+try:
+    _fromUtf8 = QtCore.QString.fromUtf8
+except AttributeError:
+    def _fromUtf8(s):
+        return s
 
-    @arglist.setter
-    def arglist(self, args):
-        """ set args from command line or this window"""
-        self._arglist = args
-        self.ui.txtArgs.setPlainText(' '.join(args))
+try:
+    _encoding = QtGui.QApplication.UnicodeUTF8
+    def _translate(context, text, disambig):
+        return QtGui.QApplication.translate(context, text, disambig, _encoding)
+except AttributeError:
+    def _translate(context, text, disambig):
+        return QtGui.QApplication.translate(context, text, disambig)
 
-    @property
-    def working_dir(self):
-        return self._working_dir
+class Ui_DiagRunConfig(object):
+    def setupUi(self, DiagRunConfig):
+        DiagRunConfig.setObjectName(_fromUtf8("DiagRunConfig"))
+        DiagRunConfig.resize(400, 300)
+        DiagRunConfig.setModal(True)
+        self.buttonBox = QtGui.QDialogButtonBox(DiagRunConfig)
+        self.buttonBox.setGeometry(QtCore.QRect(30, 240, 341, 32))
+        self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
+        self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
+        self.buttonBox.setObjectName(_fromUtf8("buttonBox"))
+        self.txtArgs = QtGui.QPlainTextEdit(DiagRunConfig)
+        self.txtArgs.setGeometry(QtCore.QRect(20, 30, 361, 131))
+        self.txtArgs.setObjectName(_fromUtf8("txtArgs"))
+        self.label = QtGui.QLabel(DiagRunConfig)
+        self.label.setGeometry(QtCore.QRect(20, 10, 101, 16))
+        self.label.setObjectName(_fromUtf8("label"))
+        self.label_2 = QtGui.QLabel(DiagRunConfig)
+        self.label_2.setGeometry(QtCore.QRect(20, 170, 101, 16))
+        self.label_2.setObjectName(_fromUtf8("label_2"))
+        self.txtWorkDir = QtGui.QLineEdit(DiagRunConfig)
+        self.txtWorkDir.setGeometry(QtCore.QRect(20, 190, 281, 22))
+        self.txtWorkDir.setObjectName(_fromUtf8("txtWorkDir"))
 
-    @working_dir.setter
-    def working_dir(self, txt):
-        """ working directory"""
-        self.ui.txtWorkDir.setText(txt)
+        self.retranslateUi(DiagRunConfig)
+        QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL(_fromUtf8("accepted()")), DiagRunConfig.accept)
+        QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL(_fromUtf8("rejected()")), DiagRunConfig.reject)
+        QtCore.QMetaObject.connectSlotsByName(DiagRunConfig)
 
-    def accept(self):
-        """ OK """
-        args = str(self.ui.txtArgs.toPlainText()).replace("\n", " ")
-        self.arglist = args.split(' ')
-        self._working_dir = str(self.ui.txtWorkDir.text())
-        QDialog.accept(self)
+    def retranslateUi(self, DiagRunConfig):
+        DiagRunConfig.setWindowTitle(_translate("DiagRunConfig", "Dialog", None))
+        self.label.setText(_translate("DiagRunConfig", "Arguments:", None))
+        self.label_2.setText(_translate("DiagRunConfig", "Working Directory:", None))
 
-    def reject(self):
-        """ Cancel """
-        self.reset()
-        QDialog.reject(self)

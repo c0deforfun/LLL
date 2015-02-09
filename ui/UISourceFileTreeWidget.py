@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui/SourceFileTreeWidget.ui'
+# Form implementation generated from reading ui file 'ui/UISourceFileTreeWidget.ui'
 #
-# Created: Sun Jan 18 16:25:01 2015
+# Created: Sun Feb  8 12:30:31 2015
 #      by: PyQt4 UI code generator 4.11.3
 #
 # WARNING! All changes made in this file will be lost!
