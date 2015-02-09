@@ -53,7 +53,8 @@ class CommandWindow(QPlainTextEdit):
 
     def tab_complete(self, cmd):
         """ complete on tab pressed """
-        self._tab_comp_handler(cmd)
+        if cmd:
+            self._tab_comp_handler(cmd)
 
     def execute_command(self, cmd):
         """ execute command when enter is pressed """
@@ -69,47 +70,53 @@ class CommandWindow(QPlainTextEdit):
         else:
             self.clear_current_line()
 
+    def get_command(self):
+        cmd = self.textCursor().block().text()
+        cmd = str(cmd)
+        cmd = cmd[1:]
+        cmd = cmd.strip()
+        return cmd
+
+    def on_escape(self, event):
+        self.clear_current_line()
+
+    def default_key_event(self, event):
+        QPlainTextEdit.keyPressEvent(self, event)
+
+    def on_up_down(self, event):
+        key_up = event.key() == Qt.Key_Up
+        key_down = event.key() == Qt.Key_Down
+        if (self.history_idx == 0 and key_up) or \
+                (self.history_idx == len(self.history) -1 and key_down):
+                    return
+        if key_up:
+            self.history_idx -= 1          
+        else:
+            self.history_idx += 1
+        cmd = self.history[self.history_idx]
+        self.clear_current_line()
+        self.textCursor().insertText(cmd)
+
+    def on_backspace(self, event):
+        """ do back deletion if not the first char """
+        if self.textCursor().columnNumber() != 1:
+            self.default_key_event(event)
+            
+    def on_tab(self, event):
+        cmd = self.get_command()
+        self.tab_complete(cmd)
+
+    def on_return(self, event):
+        cmd = self.get_command()
+        self.execute_command(cmd)
+
     def keyPressEvent(self, event):
         """ handle if special key is pressed (enter, up, down, tab, etc) """
-        key = event.key()
-        if key == Qt.Key_Escape:
-            self.clear_current_line()
-            return
-
-        key_up = key == Qt.Key_Up
-        key_down = key == Qt.Key_Down
-        if key_up or key_down:
-            if (self.history_idx == 0 and key_up) or \
-                (self.history_idx == len(self.history) -1 and key_down):
-                return
-            if key_up:
-                self.history_idx -= 1
-            if key_down:
-                self.history_idx += 1
-            cmd = self.history[self.history_idx]
-            self.clear_current_line()
-            self.textCursor().insertText(cmd)
-            return
-
-        #reset history idx
-        self.history_idx = len(self.history)
-        if key == Qt.Key_Backspace and self.textCursor().columnNumber() == 1:
-            return
-
-        if key == Qt.Key_Tab or key == Qt.Key_Return:
-            cmd = self.textCursor().block().text()
-            cmd = str(cmd)
-            cmd = cmd[1:]
-            cmd = cmd.strip()
-            if not cmd:
-                return
-
-        if key == Qt.Key_Tab:
-            self.tab_complete(cmd)
-            return
-
-        if key == Qt.Key_Return:
-            self.execute_command(cmd)
-            return
-
-        QPlainTextEdit.keyPressEvent(self, event)
+        {
+                Qt.Key_Escape: self.on_escape,
+                Qt.Key_Up: self.on_up_down,
+                Qt.Key_Down: self.on_up_down,
+                Qt.Key_Backspace: self.on_backspace,
+                Qt.Key_Tab: self.on_tab,
+                Qt.Key_Return: self.on_return
+        }.get(event.key(), self.default_key_event)(event)

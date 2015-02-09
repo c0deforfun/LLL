@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/UIMain.ui'
 #
-# Created: Sun Feb  8 12:30:31 2015
+# Created: Sun Feb  8 19:40:10 2015
 #      by: PyQt4 UI code generator 4.11.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -293,9 +293,9 @@ class Ui_MainWindow(object):
         self.action_Frames.setText(_translate("MainWindow", "Frames", None))
         self.action_Frames_2.setText(_translate("MainWindow", "frames", None))
 
+from ui.StatusBar import StatusBar
+from ui.SourceFileTreeWidget import SourceFileTreeWidget
 from ui.ValueViewerWidget import ValueViewerWidget
 from ui.FrameInfoViewer import FrameInfoViewer
-from ui.SourceFileTreeWidget import SourceFileTreeWidget
-from ui.codeEditor.commandwindow import CommandWindow
-from ui.StatusBar import StatusBar
+from ui.commandwindow import CommandWindow
 import resources_rc

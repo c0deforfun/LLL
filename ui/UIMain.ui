@@ -451,7 +451,7 @@
   <customwidget>
    <class>CommandWindow</class>
    <extends>QPlainTextEdit</extends>
-   <header>ui.codeEditor.commandwindow.h</header>
+   <header>ui.commandwindow.h</header>
   </customwidget>
   <customwidget>
    <class>StatusBar</class>
