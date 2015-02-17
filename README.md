@@ -10,12 +10,11 @@ During a debugging session, usually users need to monitor a lot of info (source 
 ## Usage:
 1. Create or edit **~/.config/c0deforfun/lll.conf** to setup the path of clang and lldb. Example:
 ```[common]
-`clang_lib_path=/home/llvm/lib* # Clang lib for source code syntax highlighting`
-*lldb_path=/home/llvm/lib/python2.7/site-packages* # Binding of lldb
-*logging_level=INFO* # Logging level
+clang_lib_path=/home/llvm/lib* # Clang lib for source code syntax highlighting
+lldb_path=/home/llvm/lib/python2.7/site-packages # Binding of lldb
+logging_level=INFO # Logging level
 ```
-
-2. *lll.sh [exe file] [args]...*
+2. **lll.sh [exe file] [args...]**
 
 ## Requirements:
 Qt 4.0
