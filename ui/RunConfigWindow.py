@@ -1,6 +1,7 @@
 """ for configuring working dir and args"""
 from PyQt4.QtGui import QDialog
 from ui.UIRunConfigWindow import Ui_DiagRunConfig
+import util
 import os
 
 class RunConfigWindow(QDialog):
@@ -43,6 +44,7 @@ class RunConfigWindow(QDialog):
         args = str(self.ui.txtArgs.toPlainText()).replace("\n", " ")
         self.arglist = args.split(' ')
         self._working_dir = str(self.ui.txtWorkDir.text())
+        util.save(args, self._working_dir)
         QDialog.accept(self)
 
     def reject(self):

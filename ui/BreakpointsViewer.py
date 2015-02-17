@@ -23,8 +23,7 @@ class BreakpointsViewer(QTreeView):
     def clear(self):
         """ clear the widget"""
         self.bp_data.clear()
-        self.bp_data.setColumnCount(2)
-        self.bp_data.setHorizontalHeaderLabels(['', ''])
+        self.bp_data.setHorizontalHeaderLabels(['ID', 'Hits', 'Ignore Count', 'Condition'])
 
     def update_bp_info(self, target):
         """ update breakpoint info """

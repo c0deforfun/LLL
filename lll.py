@@ -10,6 +10,7 @@ try:
     from PyQt4 import QtCore, Qt
     from PyQt4.QtCore import QThread, QSettings, pyqtSignal
     from PyQt4.QtGui import QMessageBox, QIcon, QMenu
+    import util
 except ImportError:
     logging.fatal('Unable to import PyQt4')
     sys.exit(1)
@@ -218,6 +219,7 @@ class MainWindow(QtGui.QMainWindow):
             self.ui.action_Run.setEnabled(True)
             self.my_listener.add_target_broadcaster(self.debugger.target.GetBroadcaster())
             self.ui.source_tree.set_root(main_file.GetDirectory(), False)
+            self.exe_filename = exe_filename
         elif line == 0:
             logging.info('cannot find entry function')
         else:
@@ -355,6 +357,7 @@ class MainWindow(QtGui.QMainWindow):
 
     def do_run(self, args=None, from_cmd=False):
         """ on run command entered"""
+        util.save_run_config(self.exe_filename, self.cfg_window.arglist, self.cfg_window.working_dir)
         process = self.debugger.run(args, from_cmd, self.cfg_window.arglist)
         if process is not None:
             self.my_listener.add_process_broadcaster(process.GetBroadcaster())
@@ -385,6 +388,7 @@ class MyListeningThread(QThread):
         self.process_broadcaster = None
         self.target_broadcaster = None
         self.focus_signal = focus_signal
+        self.exe_filename = None
 
     def add_target_broadcaster(self, broadcaster):
         """ add broadcaster for targget events"""
