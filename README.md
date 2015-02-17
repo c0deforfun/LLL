@@ -10,20 +10,20 @@ During a debugging session, usually users need to monitor a lot of info (source 
 ## Usage:
 1. Create or edit **~/.config/c0deforfun/lll.conf** to setup the path of clang and lldb. Example:
 ```[common]
-clang_lib_path=/home/llvm/lib* # Clang lib for source code syntax highlighting
+clang_lib_path=/home/llvm/lib # Clang lib for source code syntax highlighting
 lldb_path=/home/llvm/lib/python2.7/site-packages # Binding of lldb
 logging_level=INFO # Logging level
 ```
 2. **lll.sh [exe file] [args...]**
 
 ## Requirements:
-Qt 4.0
-Python 2.7
-Clang (for syntax hightlighting)
-LLDB
+- Qt 4.0
+- Python 2.7
+- Clang (for syntax hightlighting)
+- LLDB
 
 ## Tested on:
-Linux Arch on x86-64
+Linux Arch on x86-64, LLVM 3.6 branch
 
 ## Screenshot:
 ![Alt text](/docs/screenshot.png?raw=true "Screenshot")
